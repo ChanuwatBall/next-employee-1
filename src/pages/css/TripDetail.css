@@ -62,7 +62,7 @@
 }
 
 .input-icon {
-    color: #64748b;
+    color: var(--app-text-muted);
     margin-right: 0.5rem;
     font-size: 1.2rem;
 }

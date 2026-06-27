@@ -64,8 +64,10 @@ const TripDetail: React.FC = () => {
         vehicle_id: null,
         ...startFormData
       };
+      console.log("Start shift payload: ", JSON.stringify(payload));
 
-      await startShift(payload);
+      const response = await startShift(payload);
+      console.log("Start shift response: ", JSON.stringify(response));
 
       // Save active shift status to localStorage
       localStorage.setItem('active_shift_id', id);
@@ -92,8 +94,10 @@ const TripDetail: React.FC = () => {
       const payload = {
         ...stopFormData
       };
+      console.log("Stop shift payload: ", JSON.stringify(payload));
 
-      await stopShift(payload);
+      const response = await stopShift(payload);
+      console.log("Stop shift response: ", JSON.stringify(response));
 
       // Clear active shift status
       localStorage.removeItem('active_shift_id');
@@ -114,8 +118,9 @@ const TripDetail: React.FC = () => {
   };
 
   const startTracking = async () => {
+    console.log("Starting tracking...");
     try {
-      if (Capacitor.getPlatform() === 'android') {
+      // if (Capacitor.getPlatform() === 'android') {
         await ForegroundService.requestPermissions().catch(console.error);
         await ForegroundService.createNotificationChannel({
           id: "service_channel",
@@ -134,7 +139,7 @@ const TripDetail: React.FC = () => {
         }).catch((er) => {
           console.log("ForegroundService error ", JSON.stringify(er))
         })
-      }
+      // }
 
       const id = await Geolocation.watchPosition({
         enableHighAccuracy: true,

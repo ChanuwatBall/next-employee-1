@@ -31,7 +31,7 @@
     align-items: center;
     justify-content: center;
     flex: 1;
-    color: #94a3b8;
+    color: var(--app-text-soft);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     height: 100%;
@@ -67,7 +67,7 @@
 }
 
 .fab-item .tab-icon-wrapper {
-    background: var(--ion-color-primary);
+    background: linear-gradient(135deg, var(--ion-color-secondary-tint) 0%, var(--ion-color-secondary) 100%);
     color: #fff;
     width: 4.5rem;
     height: 4.5rem;
@@ -86,7 +86,7 @@
 
 .fab-item.active .tab-icon-wrapper {
     transform: translateX(-50%) translateY(-2px);
-    box-shadow: 0 12px 30px rgba(227, 32, 59, 0.5);
+    box-shadow: 0 12px 30px var(--app-secondary-shadow);
 }
 
 .fab-item .tab-icon-wrapper:active {

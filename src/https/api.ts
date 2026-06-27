@@ -191,9 +191,15 @@ export const startShift = async <T = unknown>(
 ) => {
   const response = await api.post("/driver/shift/start", payload, {
     headers: getAuthHeaders()
-  });
+  }).then((res) => {
+    console.log("startShift res ", res)
+    return res.data
+  }).catch((err) => {
+    console.log("startShift err ", err.response.data)
+    return err.response.data
+  })
 
-  return response.data;
+  return response;
 };
 
 export const stopShift = async (
@@ -201,9 +207,15 @@ export const stopShift = async (
 ) => {
   const response = await api.post("/driver/shift/stop", payload, {
     headers: getAuthHeaders()
-  });
+  }).then((res) => {
+    console.log("stopShift res ", JSON.stringify(res))
+    return res.data
+  }).catch((err) => {
+    console.log("stopShift err ", JSON.stringify(err.response.data))
+    return err.response.data
+  })
 
-  return response.data;
+  return response;
 };
 
 export interface CallCustomerPayload {

@@ -355,22 +355,22 @@ ion-input.large-input input {
 }
 
 .menu-item-icon.support {
-  background: rgba(59, 130, 246, 0.12);
-  color: #3b82f6;
+  background: var(--app-primary-soft);
+  color: var(--ion-color-primary);
 }
 
 .admin-support-item {
-  background: #eff6ff;
-  border: 1.5px solid rgba(59, 130, 246, 0.18);
+  background: var(--app-primary-soft);
+  border: 1.5px solid var(--app-primary-border);
 }
 
 .admin-support-item:hover,
 .admin-support-item:active {
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--app-primary-soft);
 }
 
 .admin-support-item .menu-item-label {
-  color: #1d4ed8;
+  color: var(--ion-color-primary);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -396,11 +396,11 @@ ion-input.large-input input {
   }
 
   .admin-support-item {
-    background: rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.25);
+    background: rgba(var(--ion-color-primary-rgb), 0.16);
+    border-color: rgba(var(--ion-color-primary-rgb), 0.3);
   }
 
   .admin-support-item .menu-item-label {
-    color: #93c5fd;
+    color: var(--ion-color-primary-tint);
   }
 }

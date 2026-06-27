@@ -101,7 +101,7 @@ const ScanQrPage: React.FC = () => {
       let qrDetail: any = null;
       try {
         qrDetail = JSON.parse(atob(code));
-        console.log("[ScanQr] qrDetail:", qrDetail);
+        console.log("[ScanQr] qrDetail:", JSON.stringify(qrDetail));
       } catch {
         alertAndRetry("QR ไม่ถูกต้อง", "ไม่สามารถอ่านข้อมูล QR ได้ กรุณาลองใหม่อีกครั้ง");
         return;
@@ -110,6 +110,7 @@ const ScanQrPage: React.FC = () => {
       const scannedTripId: string = qrDetail?.trip ?? "";
 
       // ── Case 1: tripId param exists → validate against it ──────────────
+        console.log("[ScanQr]  tripId param exists, validating against it:", tripId, "scannedTripId:", scannedTripId);
       if (tripId) {
         if (tripId !== scannedTripId) {
           alertAndRetry("เที่ยวรถไม่ถูกต้อง", "QR ที่สแกนไม่ตรงกับเที่ยวนี้ กรุณาลองใหม่อีกครั้ง");
@@ -122,12 +123,18 @@ const ScanQrPage: React.FC = () => {
 
       // ── Case 2: no tripId param → check against today's driver trips ───
       try {
+        console.log("[ScanQr] no param tripId, checking against today's trips...");
+
         const sessionStr = localStorage.getItem("session");
         const token: string = sessionStr ? JSON.parse(sessionStr)?.access_token : "";
         const today = moment().format("YYYY-MM-DD");
 
         const trips = await getDriverTrips<any[]>(today, token);
-        const matched = Array.isArray(trips) && trips.find((t: any) => t.tripId === scannedTripId);
+        console.log("[ScanQr] getDriverTrips:", JSON.stringify(trips));
+        const matched = Array.isArray(trips) && trips.find((t: any) =>{
+           console.log("t.tripId", t.tripId, " >< scannedTripId", scannedTripId);
+           t.tripId === scannedTripId
+        });
 
         if (matched) {
           history.push(`/ticket/${code}`);

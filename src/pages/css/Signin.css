@@ -1,5 +1,5 @@
 :root {
-  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --primary-gradient: linear-gradient(135deg, var(--ion-color-primary-tint) 0%, var(--ion-color-primary) 58%, var(--ion-color-primary-shade) 100%);
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.3);
   --input-bg: rgba(243, 244, 246, 0.8);
@@ -22,8 +22,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(37, 99, 235, 0.05) 0%, transparent 40%);
+  background: radial-gradient(circle at 18% 18%, var(--app-primary-soft) 0%, transparent 42%),
+    radial-gradient(circle at 84% 78%, var(--app-secondary-soft) 0%, transparent 40%);
   z-index: 0;
 }
 
@@ -59,7 +59,7 @@
 }
 
 .logo-img {
-  width: 100px;
+  width: 120px;
   margin: 0 auto 1.5rem;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
   transition: transform 0.3s ease;
@@ -79,7 +79,7 @@
 
 .subtitle-text {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--app-text-muted);
   font-weight: 500;
 }
 
@@ -90,7 +90,7 @@
 
 .modern-input-item {
   --background: var(--input-bg);
-  --color: #1e293b;
+  --color: var(--ion-text-color);
   --border-radius: 14px;
   --padding-start: 1rem;
   --highlight-height: 0;
@@ -100,9 +100,9 @@
 }
 
 .modern-input-item.item-has-focus {
-  border-color: #2563eb;
+  border-color: var(--ion-color-primary);
   --background: var(--ion-color-light);;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px var(--app-primary-soft);
 }
 
 .modern-input {
@@ -112,7 +112,7 @@
 }
 
 .input-icon {
-  color: #64748b;
+  color: var(--app-text-muted);
   margin-right: 0.5rem;
   font-size: 1.2rem;
 }
@@ -134,7 +134,7 @@
 
 .remember-label {
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--app-text-muted);
   font-weight: 500;
   margin-left: 8px;
 }
@@ -155,7 +155,7 @@
   --background: var(--primary-gradient);
   --background-hover: var(--ion-color-primary);
   --border-radius: 14px;
-  --box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  --box-shadow: 0 10px 18px -4px var(--app-primary-shadow);
   height: 52px;
   margin: 0;
   font-weight: 700;

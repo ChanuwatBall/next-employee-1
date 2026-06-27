@@ -7,11 +7,32 @@ http://ionicframework.com/docs/theming/ */
 
 :root {
     --ion-font-family: 'Inter', 'Kanit', system-ui, -apple-system, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-    --ion-color-primary: #9E0A15;
-    --ion-color-primary-rgb: 158, 10, 21;
-    --ion-color-primary-tint: #b32a3a;
-    --ion-color-primary-shade: #7a0810;
+    --ion-color-primary: #144986;
+    --ion-color-primary-rgb: 20, 73, 134;
+    --ion-color-primary-shade: #0E3268;
+    --ion-color-primary-tint: #1268B3;
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255, 255, 255;
     --ion-border-radius: 8px;
+
+    --ion-color-secondary: #F37021;
+    --ion-color-secondary-rgb: 243, 112, 33;
+    --ion-color-secondary-shade: #F15A29;
+    --ion-color-secondary-tint: #F68A46;
+    --ion-color-secondary-contrast: #ffffff;
+    --ion-color-secondary-contrast-rgb: 255, 255, 255;
+
+    --app-primary-soft: rgba(var(--ion-color-primary-rgb), 0.08);
+    --app-primary-border: rgba(var(--ion-color-primary-rgb), 0.18);
+    --app-primary-shadow: rgba(var(--ion-color-primary-rgb), 0.22);
+    --app-secondary-soft: rgba(var(--ion-color-secondary-rgb), 0.12);
+    --app-secondary-border: rgba(var(--ion-color-secondary-rgb), 0.22);
+    --app-secondary-shadow: rgba(var(--ion-color-secondary-rgb), 0.24);
+    --app-surface: #f5f7fb;
+    --app-surface-muted: #eef3f8;
+    --app-border: #dce5ef;
+    --app-text-muted: #66758a;
+    --app-text-soft: #8a98aa;
 
     --ion-color-warning: #F9E000;
     --ion-color-warning-rgba: 249, 224, 0;

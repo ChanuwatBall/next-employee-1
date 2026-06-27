@@ -1,6 +1,6 @@
 /* Dashboard Premium Styling */
 .dashboard-hero {
-    background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary) 70%, #1e40af 100%);
+    background: linear-gradient(135deg, var(--ion-color-primary-tint) 0%, var(--ion-color-primary) 60%, var(--ion-color-primary-shade) 100%);
     color: white;
     padding-bottom: 30px;
     border-bottom-left-radius: 40px;
@@ -131,7 +131,7 @@
 }
 
 .dashboard-content {
-    --background: #f8fafc;
+    --background: var(--app-surface);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -233,7 +233,7 @@
 }
 
 .section-header h3 {
-    color: #1e293b;
+    color: var(--ion-text-color);
     font-size: 1.1rem;
 }
 
@@ -263,13 +263,13 @@
     align-items: center;
     gap: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--app-border);
     transition: all 0.2s;
 }
 
 .action-button-card:active {
     transform: scale(0.96);
-    background: #f8fafc;
+    background: var(--app-surface);
 }
 
 .action-icon {
@@ -290,21 +290,21 @@
 
 .action-title {
     font-weight: 700;
-    color: #1e293b;
+    color: var(--ion-text-color);
     font-size: 1rem;
 }
 
 .action-sub {
     font-size: 0.60rem;
-    color: #64748b;
+    color: var(--app-text-muted);
     margin-top: 1px;
 }
 
 /* Highlighted Action Button */
 .action-button-card.highlight {
-    background: var(--ion-color-primary);
+    background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
     border: none;
-    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 10px 18px -4px var(--app-primary-shadow);
 }
 
 .action-button-card .action-title {
@@ -359,17 +359,17 @@ ion-searchbar.search-trip {
 
 .dot.start {
     background-color: var(--ion-color-primary);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 4px var(--app-primary-soft);
 }
 
 .dot.end {
-    background-color: var(--ion-color-success);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+    background-color: var(--ion-color-secondary);
+    box-shadow: 0 0 0 4px var(--app-secondary-soft);
 }
 
 .line-dashed {
     height: 2px;
-    background-image: linear-gradient(to right, #cbd5e1 50%, rgba(255, 255, 255, 0) 0%);
+    background-image: linear-gradient(to right, var(--app-border) 50%, rgba(255, 255, 255, 0) 0%);
     background-position: bottom;
     background-size: 8px 2px;
     background-repeat: repeat-x;
@@ -387,7 +387,7 @@ ion-searchbar.search-trip {
 }
 
 .passenger-info {
-    color: #475569;
+    color: var(--app-text-muted);
 }
 
 .action-btn-main {
@@ -402,18 +402,18 @@ ion-searchbar.search-trip {
     padding: 40px 20px;
     background: var(--ion-color-white);
     border-radius: 32px;
-    border: 2px dashed #e2e8f0;
+    border: 2px dashed var(--app-border);
     margin-top: 16px;
 }
 
 .empty-trips-icon {
     font-size: 3rem;
-    color: #f1f5f9;
+    color: var(--app-surface-muted);
     margin-bottom: 16px;
 }
 
 .empty-trips-text {
-    color: #94a3b8;
+    color: var(--app-text-soft);
     font-weight: 500;
     margin-bottom: 16px;
 }
@@ -444,15 +444,15 @@ ion-searchbar.search-trip {
     align-items: flex-start;
     gap: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
-    border-left: 4px solid var(--ion-color-warning, #ffc409);
+    border: 1px solid var(--app-border);
+    border-left: 4px solid var(--ion-color-secondary);
     margin-bottom: 16px;
     transition: all 0.2s ease;
 }
 
 .alert-icon-container {
-    background: rgba(255, 196, 9, 0.15);
-    color: var(--ion-color-warning, #ffc409);
+    background: var(--app-secondary-soft);
+    color: var(--ion-color-secondary);
     width: 40px;
     height: 40px;
     min-width: 40px;
@@ -469,21 +469,21 @@ ion-searchbar.search-trip {
 
 .alert-title {
     font-weight: 700;
-    color: #1e293b;
+    color: var(--ion-text-color);
     font-size: 0.95rem;
     margin: 0;
 }
 
 .alert-note {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--app-text-muted);
     margin-top: 2px;
     margin-bottom: 0;
 }
 
 .alert-time {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--app-text-soft);
     margin-top: 6px;
     margin-bottom: 0;
     display: flex;

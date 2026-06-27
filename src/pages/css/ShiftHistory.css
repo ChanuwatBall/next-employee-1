@@ -10,7 +10,7 @@
     padding: 20px;
     border-radius: 24px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--app-border);
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -37,8 +37,8 @@
     width: 44px;
     height: 44px;
     min-width: 44px;
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--app-primary-soft);
+    color: var(--ion-color-primary);
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -59,7 +59,7 @@
 
 .activity-time-range {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--app-text-soft);
     font-weight: 600;
     margin-top: 2px;
 }
@@ -84,7 +84,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    background: #f8fafc;
+    background: var(--app-surface);
     padding: 12px;
     border-radius: 16px;
 }
@@ -97,14 +97,14 @@
 }
 
 .stat-box:not(:last-child) {
-    border-right: 1px solid #e2e8f0;
+    border-right: 1px solid var(--app-border);
 }
 
 .stat-box-label {
     font-size: 0.6rem;
     text-transform: uppercase;
     font-weight: 800;
-    color: #94a3b8;
+    color: var(--app-text-soft);
     margin-bottom: 4px;
     letter-spacing: 0.5px;
 }
@@ -112,7 +112,7 @@
 .stat-box-value {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #475569;
+    color: var(--app-text-muted);
 }
 
 .activity-notes {
@@ -136,16 +136,16 @@
     padding: 60px 40px;
     background: var(--ion-color-white);
     border-radius: 40px;
-    border: 2px dashed #e2e8f0;
+    border: 2px dashed var(--app-border);
 }
 
 .empty-state-icon {
     font-size: 3rem;
-    color: #f1f5f9;
+    color: var(--app-surface-muted);
     margin-bottom: 20px;
 }
 
 .empty-state-text {
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--app-text-soft);
 }
