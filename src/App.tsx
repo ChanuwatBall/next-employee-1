@@ -21,7 +21,7 @@ import Sigin from './pages/Sigin';
 import ShiftHistory from './pages/ShiftHistory';
 import CustomTabBar from './components/CustomTabBar';
 import React, { useEffect, useState } from 'react';
-import { ForegroundService } from '@capawesome-team/capacitor-android-foreground-service';
+import { ForegroundService, ServiceType } from '@capawesome-team/capacitor-android-foreground-service';
 import { Capacitor } from '@capacitor/core';
 import { logoutApi } from './http/api';
 
@@ -196,6 +196,7 @@ const App: React.FC = () => {
             body: "ระบบติดตามพิกัดรถกำลังทำงานในเบื้องหลัง",
             smallIcon: "ic_launcher_foreground",
             notificationChannelId: "service_channel",
+            serviceType: ServiceType.Location,
           }).catch(console.error);
         }).catch(console.error);
       }

@@ -77,7 +77,7 @@ const TripDetail: React.FC = () => {
       setShowToast(true);
 
       // Start Tracking
-      startTracking();
+      await startTracking();
     } catch (error) {
       console.error(error);
       setToastMsg("เกิดข้อผิดพลาดในการเริ่มเที่ยว");
@@ -120,14 +120,23 @@ const TripDetail: React.FC = () => {
   const startTracking = async () => {
     console.log("Starting tracking...");
     try {
-      // if (Capacitor.getPlatform() === 'android') {
-        await ForegroundService.requestPermissions().catch(console.error);
+      const locationPermission = await Geolocation.requestPermissions();
+      console.log("Geolocation permission: ", JSON.stringify(locationPermission));
+
+      if (locationPermission.location !== 'granted' && locationPermission.coarseLocation !== 'granted') {
+        throw new Error("Location permission was not granted");
+      }
+
+      if (Capacitor.getPlatform() === 'android') {
+        const notificationPermission = await ForegroundService.requestPermissions();
+        console.log("Foreground service permission: ", JSON.stringify(notificationPermission));
+
         await ForegroundService.createNotificationChannel({
           id: "service_channel",
           name: "ระบบติดตามเที่ยวรถ",
           description: "ใช้สำหรับการแจ้งเตือนเมื่อกำลังอยู่ในกะ",
           importance: 3
-        }).catch(console.error);
+        });
 
         await ForegroundService.startForegroundService({
           id: 12345,
@@ -136,15 +145,20 @@ const TripDetail: React.FC = () => {
           smallIcon: "ic_launcher_foreground",
           notificationChannelId: "service_channel",
           serviceType: ServiceType.Location,
-        }).catch((er) => {
-          console.log("ForegroundService error ", JSON.stringify(er))
-        })
-      // }
+        });
 
-      const id = await Geolocation.watchPosition({
+        console.log("Foreground service started");
+      }
+
+      const trackingWatchId = await Geolocation.watchPosition({
         enableHighAccuracy: true,
         timeout: 10000,
       }, (position, err) => {
+        if (err) {
+          console.error("Geolocation watch error:", JSON.stringify(err));
+          return;
+        }
+
         if (position) {
           console.log("position ", JSON.stringify(position));
           updateDriverLocation({
@@ -155,9 +169,11 @@ const TripDetail: React.FC = () => {
           }).catch(console.error);
         }
       });
-      setWatchId(id);
+      setWatchId(trackingWatchId);
+      console.log("Geolocation watch started: ", trackingWatchId);
     } catch (error) {
       console.error("Tracking error:", JSON.stringify(error));
+      throw error;
     }
   };
 
