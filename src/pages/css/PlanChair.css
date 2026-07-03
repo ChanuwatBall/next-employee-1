@@ -342,6 +342,284 @@
     border-bottom: none;
 }
 
+.sale-ticket-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 1fr 150px;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.12);
+}
+
+.sale-ticket-summary {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sale-ticket-summary span {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.sale-ticket-summary strong {
+    color: #0f172a;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sale-modal {
+    padding: 20px 16px 24px;
+}
+
+.sale-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.sale-modal-header h2 {
+    margin: 0 0 4px;
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.sale-modal-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.sale-close-button {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.same-phone-item {
+    --background: #f8fafc;
+    --border-radius: 12px;
+    margin-bottom: 14px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.sale-passenger-list {
+    background: transparent;
+    padding: 0;
+}
+
+.sale-passenger-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.sale-passenger-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.sale-passenger-title span {
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.sale-passenger-title strong {
+    flex-shrink: 0;
+    color: var(--ion-color-primary);
+    font-size: 0.875rem;
+}
+
+.sale-form-item {
+    --background: #f8fafc;
+    --border-radius: 10px;
+    --padding-start: 12px;
+    --inner-padding-end: 12px;
+    margin-top: 10px;
+}
+
+.sale-form-item ion-label {
+    color: #64748b !important;
+    font-weight: 700;
+}
+
+.sale-payment-footer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    background: transparent;
+}
+
+.sale-summary-card,
+.sale-summary-passenger,
+.sale-summary-total {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.sale-summary-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.sale-summary-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 7px 0;
+}
+
+.sale-summary-row span {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.sale-summary-row strong {
+    color: #0f172a;
+    font-size: 0.9rem;
+    text-align: right;
+    word-break: break-word;
+}
+
+.sale-summary-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: rgba(var(--ion-color-primary-rgb), 0.08);
+    border-color: rgba(var(--ion-color-primary-rgb), 0.18);
+}
+
+.sale-summary-total span {
+    color: #334155;
+    font-weight: 900;
+}
+
+.sale-summary-total strong {
+    color: var(--ion-color-primary);
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.sale-qr-card,
+.sale-success-card,
+.sale-failed-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.sale-qr-card img {
+    width: min(240px, 100%);
+    aspect-ratio: 1;
+    object-fit: contain;
+    margin: 0 auto 12px;
+    display: block;
+}
+
+.sale-qr-card p {
+    color: #475569;
+    font-size: 0.8rem;
+    word-break: break-all;
+    margin: 0;
+}
+
+.sale-qr-placeholder {
+    width: min(240px, 100%);
+    aspect-ratio: 1;
+    margin: 0 auto 12px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    background: #f8fafc;
+}
+
+.sale-success-icon,
+.sale-failed-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 1.75rem;
+    font-weight: 900;
+}
+
+.sale-success-icon {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+}
+
+.sale-failed-icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.sale-success-card h3,
+.sale-failed-card h3 {
+    color: #0f172a;
+    font-size: 1.15rem;
+    font-weight: 900;
+    margin: 0 0 6px;
+}
+
+.sale-success-card p,
+.sale-failed-card p {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 360px) {
+    .sale-ticket-footer,
+    .sale-payment-footer {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (prefers-color-scheme: dark) {
     .modal-card-box {
         background-color: #1e293b;
@@ -358,5 +636,85 @@
 
     .call-record-item {
         border-color: #334155;
+    }
+
+    .sale-ticket-footer {
+        background: rgba(15, 23, 42, 0.98);
+    }
+
+    .sale-payment-footer {
+        background: transparent;
+    }
+
+    .sale-ticket-summary strong,
+    .sale-modal-header h2,
+    .sale-passenger-title span {
+        color: #f8fafc;
+    }
+
+    .sale-modal-header p,
+    .sale-ticket-summary span {
+        color: #94a3b8;
+    }
+
+    .sale-close-button,
+    .same-phone-item,
+    .sale-form-item {
+        --background: #1e293b;
+        background: #1e293b;
+        color: #cbd5e1;
+    }
+
+    .sale-passenger-card {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: none;
+    }
+
+    .sale-summary-card,
+    .sale-summary-passenger {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: none;
+    }
+
+    .sale-summary-row strong {
+        color: #f8fafc;
+    }
+
+    .sale-summary-row span,
+    .sale-summary-total span {
+        color: #94a3b8;
+    }
+
+    .sale-summary-total {
+        background: rgba(var(--ion-color-primary-rgb), 0.16);
+        border-color: rgba(var(--ion-color-primary-rgb), 0.3);
+        box-shadow: none;
+    }
+
+    .sale-qr-card,
+    .sale-success-card,
+    .sale-failed-card {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: none;
+    }
+
+    .sale-qr-card p,
+    .sale-success-card p,
+    .sale-failed-card p {
+        color: #94a3b8;
+    }
+
+    .sale-qr-placeholder {
+        background: #0f172a;
+        border-color: #334155;
+        color: #94a3b8;
+    }
+
+    .sale-success-card h3,
+    .sale-failed-card h3 {
+        color: #f8fafc;
     }
 }

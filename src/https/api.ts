@@ -161,6 +161,56 @@ export const checkInSelf = async (ticketNumber: string, qrCode: string) => {
   return response.data;
 }
 
+export interface CreatePaymentQrPayload {
+  amount: number;
+}
+
+export const createPaymentQr = async (payload: CreatePaymentQrPayload) => {
+  const response = await api.post(`/payment/qr`, payload, {
+    params: { amount: payload.amount },
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+  return response.data;
+};
+
+export interface CreateBookingPassengerPayload {
+  seatId: string;
+  seatNumber: string;
+  fullName: string;
+  thaiId: string;
+  phone: string;
+  passengerType: string;
+}
+
+export interface CreateBookingPayload {
+  tripId: string;
+  travelDate: string;
+  originProvinceId: string;
+  destinationProvinceId: string;
+  boardingPointId: string;
+  dropOffPointId: string;
+  passengers: CreateBookingPassengerPayload[];
+  promoCode: string;
+  omiseChargeId: string;
+}
+
+export const createBooking = async (payload: CreateBookingPayload) => {
+  const response = await api.post(`/bookings`, payload, {
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json"
+    }
+  });
+  return response.data;
+};
+
+export const getPaymentTransaction = async (transactionId: string) => {
+  const response = await api.get(`/payment/transaction/${transactionId}`);
+  return response.data;
+};
+
 export const getDriverRounds = async (limit: number = 10, offset: number = 0) => {
   const response = await api.get(`/driver/rounds`, {
     params: { limit, offset },
