@@ -32,6 +32,81 @@
     width: 100%;
 }
 
+.passenger-location-preview {
+    width: 90%;
+    margin-top: 1rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid var(--ion-color-light-tint);
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+}
+
+.passenger-location-map {
+    position: relative;
+    width: 100%;
+    height: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #e8f1ec;
+    background-image:
+        linear-gradient(28deg, transparent 44%, rgba(255, 255, 255, 0.92) 45%, rgba(255, 255, 255, 0.92) 49%, transparent 50%),
+        linear-gradient(118deg, transparent 42%, rgba(255, 255, 255, 0.78) 43%, rgba(255, 255, 255, 0.78) 47%, transparent 48%),
+        linear-gradient(0deg, transparent 48%, rgba(76, 154, 111, 0.18) 49%, rgba(76, 154, 111, 0.18) 51%, transparent 52%),
+        linear-gradient(90deg, transparent 48%, rgba(76, 154, 111, 0.16) 49%, rgba(76, 154, 111, 0.16) 51%, transparent 52%);
+    background-size: 8rem 8rem, 7rem 7rem, 2.2rem 2.2rem, 2.2rem 2.2rem;
+}
+
+.passenger-location-map::before,
+.passenger-location-map::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    background: rgba(var(--ion-color-primary-rgb), 0.18);
+}
+
+.passenger-location-map::before {
+    width: 3.75rem;
+    height: 3.75rem;
+    left: -0.75rem;
+    bottom: -1.25rem;
+}
+
+.passenger-location-map::after {
+    width: 5rem;
+    height: 5rem;
+    right: -1.5rem;
+    top: -2rem;
+}
+
+.passenger-location-title {
+    position: relative;
+    z-index: 1;
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 0 1rem;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.passenger-location-expand {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 2;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: var(--ion-color-primary);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+    font-size: 0.8rem;
+}
+
 /* Modern Input Styles from Signin */
 .modern-input-item {
     --background: rgba(243, 244, 246, 0.8);

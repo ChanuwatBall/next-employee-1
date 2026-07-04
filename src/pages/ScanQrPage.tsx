@@ -15,7 +15,7 @@ import {
 import { BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
 import "./css/ScanQrPage.css";
 import { arrowBackCircleOutline } from "ionicons/icons";
-import { useHistory, useParams } from "react-router";
+import { useHistory, useLocation, useParams } from "react-router";
 import { getDriverTrips } from "../http/api";
 import moment from "moment";
 
@@ -44,6 +44,7 @@ const ScanQrPage: React.FC = () => {
   const scannedOnce = useRef(false);
   const listenerRef = useRef<any>(null);
   const history = useHistory();
+  const location = useLocation();
   const [ionalert, dimissIonAlert] = useIonAlert();
 
   const stop = async () => {
@@ -73,6 +74,57 @@ const ScanQrPage: React.FC = () => {
     });
   };
 
+  const validateAndOpenTicket = async (code: string, shouldStopScanner = false) => {
+    let qrDetail: any = null;
+    try {
+      qrDetail = JSON.parse(atob(code));
+      console.log("[ScanQr] qrDetail:", JSON.stringify(qrDetail));
+    } catch {
+      alertAndRetry("QR ไม่ถูกต้อง", "ไม่สามารถอ่านข้อมูล QR ได้ กรุณาลองใหม่อีกครั้ง");
+      return;
+    }
+
+    const scannedTripId: string = qrDetail?.trip ?? "";
+
+    if (tripId != undefined && tripId !== null) {
+      console.log("[ScanQr] tripId param exists, validating against it:", tripId, "scannedTripId:", scannedTripId);
+      if (tripId) {
+        if (tripId !== scannedTripId) {
+          alertAndRetry("เที่ยวรถไม่ถูกต้อง", "QR ที่สแกนไม่ตรงกับเที่ยวนี้ กรุณาลองใหม่อีกครั้ง");
+          return;
+        }
+        history.push(`/ticket/${code}`);
+        if (shouldStopScanner) await stop();
+        return;
+      }
+    }
+
+    try {
+      console.log("[ScanQr] no param tripId, checking against today's trips...");
+
+      const sessionStr = localStorage.getItem("session");
+      const token: string = sessionStr ? JSON.parse(sessionStr)?.access_token : "";
+      const today = moment().format("YYYY-MM-DD");
+
+      const trips = await getDriverTrips<any[]>(today, token);
+      console.log("[ScanQr] getDriverTrips:", JSON.stringify(trips));
+      const matched = Array.isArray(trips) && trips.find((t: any) => {
+        console.log("t.tripId", t.tripId, " >< scannedTripId", scannedTripId);
+        return t.tripId === scannedTripId;
+      });
+      console.log("[ScanQr] matched trip:", JSON.stringify(matched));
+      if (matched) {
+        history.push(`/ticket/${code}`);
+        if (shouldStopScanner) await stop();
+      } else {
+        alertAndRetry("ไม่พบเที่ยวรถ", "QR นี้ไม่ตรงกับเที่ยวรถของคุณวันนี้ กรุณาตรวจสอบอีกครั้ง");
+      }
+    } catch (err) {
+      console.error("[ScanQr] getDriverTrips error:", err);
+      alertAndRetry("เกิดข้อผิดพลาด", "ไม่สามารถตรวจสอบข้อมูลเที่ยวรถได้ กรุณาลองใหม่");
+    }
+  };
+
   const start = async () => {
     scannedOnce.current = false;
 
@@ -96,62 +148,18 @@ const ScanQrPage: React.FC = () => {
       const code = event.barcodes?.[0]?.rawValue;
       if (!code) return;
       scannedOnce.current = true;
-
-      // ── Decode QR payload ──────────────────────────────────────────────
-      let qrDetail: any = null;
-      try {
-        qrDetail = JSON.parse(atob(code));
-        console.log("[ScanQr] qrDetail:", JSON.stringify(qrDetail));
-      } catch {
-        alertAndRetry("QR ไม่ถูกต้อง", "ไม่สามารถอ่านข้อมูล QR ได้ กรุณาลองใหม่อีกครั้ง");
-        return;
-      }
-
-      const scannedTripId: string = qrDetail?.trip ?? "";
-
-      if(tripId != undefined && tripId !==  null) {
-      // ── Case 1: tripId param exists → validate against it ──────────────
-        console.log("[ScanQr]  tripId param exists, validating against it:", tripId, "scannedTripId:", scannedTripId);
-      if (tripId) {
-        if (tripId !== scannedTripId) {
-          alertAndRetry("เที่ยวรถไม่ถูกต้อง", "QR ที่สแกนไม่ตรงกับเที่ยวนี้ กรุณาลองใหม่อีกครั้ง");
-          return;
-        }
-        history.push(`/ticket/${code}`);
-        await stop();
-        return;
-      }
-    }
-
-      // ── Case 2: no tripId param → check against today's driver trips ───
-      try {
-        console.log("[ScanQr] no param tripId, checking against today's trips...");
-
-        const sessionStr = localStorage.getItem("session");
-        const token: string = sessionStr ? JSON.parse(sessionStr)?.access_token : "";
-        const today = moment().format("YYYY-MM-DD");
-
-        const trips = await getDriverTrips<any[]>(today, token);
-        console.log("[ScanQr] getDriverTrips:", JSON.stringify(trips));
-        const matched = Array.isArray(trips) && trips.find((t: any) =>{
-           console.log("t.tripId", t.tripId, " >< scannedTripId", scannedTripId);
-           return t.tripId === scannedTripId;
-        });
-        console.log("[ScanQr] matched trip:", JSON.stringify(matched));
-        if (matched) {
-          history.push(`/ticket/${code}`);
-          await stop();
-        } else {
-          alertAndRetry("ไม่พบเที่ยวรถ", "QR นี้ไม่ตรงกับเที่ยวรถของคุณวันนี้ กรุณาตรวจสอบอีกครั้ง");
-        }
-      } catch (err) {
-        console.error("[ScanQr] getDriverTrips error:", err);
-        alertAndRetry("เกิดข้อผิดพลาด", "ไม่สามารถตรวจสอบข้อมูลเที่ยวรถได้ กรุณาลองใหม่");
-      }
+      await validateAndOpenTicket(code, true);
     });
   };
 
-  useIonViewDidEnter(() => { start(); });
+  useIonViewDidEnter(() => {
+    const code = new URLSearchParams(location.search).get("code");
+    if (code) {
+      validateAndOpenTicket(code);
+      return;
+    }
+    start();
+  });
   useIonViewWillLeave(() => { stop(); });
 
   return (

@@ -1,4 +1,4 @@
-import { faArrowDown, faArrowLeft, faArrowRight, faArrowUp, faCarSide, faLocationDot, faQrcode } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowLeft, faArrowRight, faArrowUp, faCarSide, faExpand, faLocationDot, faQrcode } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonGrid, IonRow, IonCol, IonText, IonBackButton, IonLabel, IonIcon, IonChip, IonAccordion, IonAccordionGroup, IonBadge, IonModal, IonItem, IonInput, IonList, IonLoading, IonToast, IonTextarea, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { speedometerOutline, batteryChargingOutline, documentTextOutline, qrCodeOutline, giftOutline } from 'ionicons/icons';
@@ -344,6 +344,8 @@ const TripDetail: React.FC = () => {
               </div>
             </BouceAnimation>
 
+            <PassengerLocationPreview />
+
             <br />
             <div style={{ width: "100%" }} >
               <BouceAnimation duration={0.4} delay={0.5} className='ion-text-left ion-padding' style={{ width: "100%" }}  >
@@ -510,6 +512,20 @@ const TripDetail: React.FC = () => {
 
 export default TripDetail;
 
+const PassengerLocationPreview: React.FC = () => {
+  return (
+    <BouceAnimation duration={0.4} delay={0.3} className="passenger-location-preview">
+      <div className="passenger-location-map" role="button" tabIndex={0}>
+        <div className="passenger-location-expand">
+          <FontAwesomeIcon icon={faExpand} />
+        </div>
+        <IonText color="dark" className="passenger-location-title">
+          ดูตำแหน่งผู้โดยสาร
+        </IonText>
+      </div>
+    </BouceAnimation>
+  );
+};
 
 const StationTrip: React.FC<{ station: any }> = ({ station }) => {
   return (

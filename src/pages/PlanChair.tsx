@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, createPaymentQr, createBooking, getPaymentTransaction } from "../https/api";
+import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, createPaymentQr, createBooking, getPaymentTransaction, getBookingDetail } from "../https/api";
 import { useParams, useHistory } from "react-router-dom";
 import {
     IonPage,
@@ -193,7 +193,9 @@ const PlanChair: React.FC = () => {
     const [saleStep, setSaleStep] = useState<SaleStep>("form");
     const [cashReceived, setCashReceived] = useState("");
     const [cashDiscount, setCashDiscount] = useState("");
+    const [saleBookingId, setSaleBookingId] = useState("");
     const [saleBookingReference, setSaleBookingReference] = useState("");
+    const [saleTicketCode, setSaleTicketCode] = useState("");
     const [salePaymentMethod, setSalePaymentMethod] = useState<SalePaymentMethod>(null);
     const [qrPaymentData, setQrPaymentData] = useState<any | null>(null);
     const [qrTransactionId, setQrTransactionId] = useState("");
@@ -222,8 +224,8 @@ const PlanChair: React.FC = () => {
     const cashDiscountAmount = Number(cashDiscount) || 0;
     const cashNetTotal = Math.max(saleTotalPrice - cashDiscountAmount, 0);
     const cashChange = Math.max(cashReceivedAmount - cashNetTotal, 0);
-    const qrPaymentImage = qrPaymentData?.qrCode || qrPaymentData?.qr_code || qrPaymentData?.qrImage || qrPaymentData?.qr_image || qrPaymentData?.image || qrPaymentData?.url || qrPaymentData?.qrUrl;
-    const qrPaymentText = qrPaymentData?.payload || qrPaymentData?.qrPayload || qrPaymentData?.qr_payload || qrPaymentData?.code || qrPaymentData?.data;
+    const qrPaymentImage = qrPaymentData?.qrCodeUrl // || qrPaymentData?.qr_code || qrPaymentData?.qrImage || qrPaymentData?.qr_image || qrPaymentData?.image || qrPaymentData?.url || qrPaymentData?.qrUrl;
+    const qrPaymentText = qrPaymentData?.status // || qrPaymentData?.qrPayload || qrPaymentData?.qr_payload || qrPaymentData?.code || qrPaymentData?.data;
 
     const getBoardingPointId = () => {
         const stops = trip?.bus_stops || [];
@@ -241,6 +243,10 @@ const PlanChair: React.FC = () => {
 
     const extractBookingReference = (booking: any) => (
         booking?.bookingReference || booking?.booking_reference || booking?.reference || booking?.id || ""
+    );
+
+    const extractBookingId = (booking: any) => (
+        booking?.id || booking?.bookingId || booking?.booking_id || ""
     );
 
     useEffect(() => {
@@ -323,7 +329,9 @@ const PlanChair: React.FC = () => {
         setSaleStep("form");
         setCashReceived("");
         setCashDiscount("");
+        setSaleBookingId("");
         setSaleBookingReference("");
+        setSaleTicketCode("");
         setSalePaymentMethod(null);
         setQrPaymentData(null);
         setQrTransactionId("");
@@ -422,6 +430,7 @@ const PlanChair: React.FC = () => {
             setQrTransactionId(transactionId);
 
             const booking = await createBooking(buildBookingPayload(transactionId));
+            setSaleBookingId(extractBookingId(booking));
             setSaleBookingReference(extractBookingReference(booking));
 
             qrDeadlineRef.current = Date.now() + (5 * 60 * 1000);
@@ -476,20 +485,56 @@ const PlanChair: React.FC = () => {
         };
 
         localStorage.setItem(`driver_cash_sale_${bookingReference}`, JSON.stringify(localSaleBooking));
+        setSaleBookingId(bookingReference);
         setSaleBookingReference(bookingReference);
+        setSaleTicketCode(btoa(JSON.stringify({
+            trip: id,
+            bookingReference,
+            source: "driver_cash_sale",
+        })));
         setSalePaymentMethod("cash");
         setSaleStep("success");
         iontoast({ message: "ชำระเงินสดสำเร็จ", duration: 2000, color: "success", position: "top" });
     };
 
     const openSoldTicketDetail = () => {
-        if (!saleBookingReference) return;
-        const qrDetail = {
-            trip: id,
-            bookingReference: saleBookingReference,
-            source: "driver_cash_sale",
-        };
-        history.push(`/ticket/${btoa(JSON.stringify(qrDetail))}`);
+        if (!saleTicketCode) return;
+        setShowSaleModal(false);
+        if (salePaymentMethod === "qrcode") {
+            window.setTimeout(() => {
+                history.push(`/scan-qr/${id}?code=${encodeURIComponent(saleTicketCode)}`);
+            }, 150);
+            return;
+        }
+        window.setTimeout(() => {
+            history.push(`/ticket/${saleTicketCode}`);
+        }, 150);
+    };
+
+    const finalizeQrBookingSuccess = async () => {
+        try {
+            if (!saleBookingId) {
+                throw new Error("ไม่พบรหัส booking สำหรับดึงรายละเอียด");
+            }
+
+            const bookingDetail = await getBookingDetail(saleBookingId);
+            const tripId = bookingDetail?.tripId || bookingDetail?.trip_id || id;
+            const bookingReference = bookingDetail?.bookingReference || bookingDetail?.booking_reference || saleBookingReference;
+
+            if (!tripId || !bookingReference) {
+                throw new Error("ข้อมูล booking ไม่ครบถ้วน");
+            }
+
+            const code = btoa(JSON.stringify({ trip: tripId, bookingReference }));
+            setSaleBookingReference(bookingReference);
+            setSaleTicketCode(code);
+            setSaleStep("success");
+            iontoast({ message: "จองตั๋วสำเร็จ", duration: 2000, color: "success", position: "top" });
+        } catch (err: any) {
+            console.error("Fetch booking after QR success error:", err);
+            setSaleErrorMessage(err?.response?.data?.message || err?.response?.data?.error || err?.message || "ดึงข้อมูล booking ไม่สำเร็จ");
+            setSaleStep("failed");
+        }
     };
 
     useEffect(() => {
@@ -520,8 +565,7 @@ const PlanChair: React.FC = () => {
 
                 if (status === "success" || status === "successful" || status === "paid") {
                     window.clearInterval(intervalId);
-                    setSaleStep("success");
-                    iontoast({ message: "จองตั๋วสำเร็จ", duration: 2000, color: "success", position: "top" });
+                    await finalizeQrBookingSuccess();
                 }
 
                 if (status === "failed" || status === "fail" || status === "canceled" || status === "cancelled" || status === "expired") {
@@ -535,7 +579,7 @@ const PlanChair: React.FC = () => {
         }, 1000);
 
         return () => window.clearInterval(intervalId);
-    }, [saleStep, qrTransactionId, iontoast]);
+    }, [saleStep, qrTransactionId, saleBookingId, saleBookingReference, iontoast]);
 
     const toggleSeat = useCallback(async (seat: Seat) => {
         if (seat.status === "booked" || seat.status === "unavailable") {
@@ -1210,9 +1254,9 @@ const PlanChair: React.FC = () => {
                     <br />
                     <div className="px-5 pb-6 pt-3 border-slate-100 flex gap-3 mt-8 ion-padding-horizontal"
                         style={{ borderTop: "1px solid #e5e5e5", width: "100%", maxWidth: "720px" }} >
-                        <IonButton expand="block" fill="solid" color="primary" mode="ios" className="flex-1" onClick={checkInSeat} disabled={!!selectedSeatData?.ticket_id?.checked_in_at || !isToday}>
+                        {/* <IonButton expand="block" fill="solid" color="primary" mode="ios" className="flex-1" onClick={checkInSeat} disabled={!!selectedSeatData?.ticket_id?.checked_in_at || !isToday}>
                             เช็คอินผู้โดยสาร
-                        </IonButton>
+                        </IonButton> */}
                         <IonButton expand="block" fill="outline" color="primary" mode="ios" className="flex-1" onClick={() => {
                             presentActionSheet({
                                 header: `ติดต่อผู้โดยสาร`,

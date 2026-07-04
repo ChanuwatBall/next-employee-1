@@ -248,6 +248,14 @@
   margin: 0;
 }
 
+.home-button {
+  --color: #64748b;
+  --border-radius: 12px;
+  font-weight: 700;
+  height: 44px;
+  margin: 0;
+}
+
 .route-container-dark {
   display: flex;
   align-items: center;

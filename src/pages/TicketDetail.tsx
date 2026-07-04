@@ -59,19 +59,19 @@ const TicketDetail: React.FC = () => {
     setIsLoading(true);
     const checkedAt = moment().format();
     try {
-      if (booking?.isLocalSale) {
-        setBooking((prev: any) => {
-          if (!prev) return prev;
-          const updated = {
-            ...prev,
-            tickets: prev.tickets.map((t: any) => t.ticket_number === ticket.ticket_number ? { ...t, checked_in_at: checkedAt } : t)
-          };
-          localStorage.setItem(`driver_cash_sale_${prev.reference}`, JSON.stringify(updated));
-          return updated;
-        });
-        iontoast({ message: 'เช็คอินสำเร็จ', color: 'success', duration: 2000 });
-        return;
-      }
+      // if (booking?.isLocalSale) {
+      //   setBooking((prev: any) => {
+      //     if (!prev) return prev;
+      //     const updated = {
+      //       ...prev,
+      //       tickets: prev.tickets.map((t: any) => t.ticket_number === ticket.ticket_number ? { ...t, checked_in_at: checkedAt } : t)
+      //     };
+      //     localStorage.setItem(`driver_cash_sale_${prev.reference}`, JSON.stringify(updated));
+      //     return updated;
+      //   });
+      //   iontoast({ message: 'เช็คอินสำเร็จ', color: 'success', duration: 2000 });
+      //   return;
+      // }
 
       const qrBookingCode = await QRCode.toDataURL(ticket.ticket_number);
       const rescheckin = await checkInSelf(ticket.ticket_number, qrBookingCode);
@@ -104,19 +104,19 @@ const TicketDetail: React.FC = () => {
     const checkedAt = moment().format();
 
     try {
-      if (booking?.isLocalSale) {
-        setBooking((prev: any) => {
-          if (!prev) return prev;
-          const updated = {
-            ...prev,
-            tickets: prev.tickets.map((t: any) => ({ ...t, checked_in_at: t.checked_in_at || checkedAt }))
-          };
-          localStorage.setItem(`driver_cash_sale_${prev.reference}`, JSON.stringify(updated));
-          return updated;
-        });
-        iontoast({ message: 'ดำเนินการเช็คอินเรียบร้อยแล้ว', color: 'success', duration: 2000 });
-        return;
-      }
+      // if (booking?.isLocalSale) {
+      //   setBooking((prev: any) => {
+      //     if (!prev) return prev;
+      //     const updated = {
+      //       ...prev,
+      //       tickets: prev.tickets.map((t: any) => ({ ...t, checked_in_at: t.checked_in_at || checkedAt }))
+      //     };
+      //     localStorage.setItem(`driver_cash_sale_${prev.reference}`, JSON.stringify(updated));
+      //     return updated;
+      //   });
+      //   iontoast({ message: 'ดำเนินการเช็คอินเรียบร้อยแล้ว', color: 'success', duration: 2000 });
+      //   return;
+      // }
 
       const promises = booking.tickets.map(async (ticket: any) => {
         if (ticket.checked_in_at) return;
@@ -178,13 +178,13 @@ const TicketDetail: React.FC = () => {
         const qrDetail = JSON.parse(decoded);
         console.log("Decoded QR Detail:", qrDetail);
 
-        if (qrDetail?.source === "driver_cash_sale" && qrDetail?.bookingReference) {
-          const localBookingRaw = localStorage.getItem(`driver_cash_sale_${qrDetail.bookingReference}`);
-          if (localBookingRaw) {
-            setBooking(JSON.parse(localBookingRaw));
-            return;
-          }
-        }
+        // if (qrDetail?.source === "driver_cash_sale" && qrDetail?.bookingReference) {
+        //   const localBookingRaw = localStorage.getItem(`driver_cash_sale_${qrDetail.bookingReference}`);
+        //   if (localBookingRaw) {
+        //     setBooking(JSON.parse(localBookingRaw));
+        //     return;
+        //   }
+        // }
 
         const passengers: any = await getDriverTripPassengers(qrDetail.trip)
         const tripData = await getTripDetail(qrDetail.trip)
@@ -386,7 +386,7 @@ const TicketDetail: React.FC = () => {
           </div>
         )}
 
-        <div style={{ height: '140px' }}></div>
+        <div style={{ height: '210px' }}></div>
       </IonContent>
 
       {booking && (<div className="action-footer "  >
@@ -408,6 +408,14 @@ const TicketDetail: React.FC = () => {
           onClick={() => calltoCustomer(booking.tickets[0].passenger_phone, booking.tickets[0])}
         >
           <IonIcon icon={callOutline} /> &nbsp; โทรติดต่อผู้โดยสาร
+        </IonButton>
+        <IonButton
+          expand="block"
+          fill="clear"
+          className="home-button"
+          onClick={() => history.replace('/home')}
+        >
+          กลับหน้า Home
         </IonButton>
       </div>)}
 
