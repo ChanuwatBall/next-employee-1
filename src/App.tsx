@@ -16,6 +16,7 @@ import ScanQrPage from './pages/ScanQrPage';
 import Profile from './pages/Profile';
 import Trips from './pages/Trips';
 import TripDetail from './pages/TripDetail';
+import TripMap from './pages/TripMap';
 import TicketDetail from './pages/TicketDetail';
 import Sigin from './pages/Sigin';
 import ShiftHistory from './pages/ShiftHistory';
@@ -23,7 +24,7 @@ import CustomTabBar from './components/CustomTabBar';
 import React, { useEffect, useState } from 'react';
 import { ForegroundService, ServiceType } from '@capawesome-team/capacitor-android-foreground-service';
 import { Capacitor } from '@capacitor/core';
-import { logoutApi } from './http/api';
+import { getPreferences, logoutApi } from './http/api';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -61,6 +62,99 @@ import { faBusSide, faClipboardList, faQrcode } from '@fortawesome/free-solid-sv
 import { faHouse, faUser } from '@fortawesome/free-regular-svg-icons';
 
 setupIonicReact();
+
+const normalizeHexColor = (value: string) => {
+  const trimmed = value.trim();
+
+  if (/^#([0-9a-fA-F]{3})$/.test(trimmed)) {
+    return `#${trimmed.slice(1).split('').map((character) => character + character).join('')}`;
+  }
+
+  return /^#([0-9a-fA-F]{6})$/.test(trimmed) ? trimmed : null;
+};
+
+const hexToRgb = (value: string) => {
+  const normalized = normalizeHexColor(value);
+
+  if (!normalized) {
+    return null;
+  }
+
+  const red = Number.parseInt(normalized.slice(1, 3), 16);
+  const green = Number.parseInt(normalized.slice(3, 5), 16);
+  const blue = Number.parseInt(normalized.slice(5, 7), 16);
+
+  return { red, green, blue };
+};
+
+const rgbToHex = (red: number, green: number, blue: number) => {
+  const toHex = (channel: number) => channel.toString(16).padStart(2, '0');
+  return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
+};
+
+const mixColor = (value: string, target: [number, number, number], ratio: number) => {
+  const rgb = hexToRgb(value);
+
+  if (!rgb) {
+    return null;
+  }
+
+  const blend = (channel: number, targetChannel: number) =>
+    Math.round(channel + (targetChannel - channel) * ratio);
+
+  return rgbToHex(blend(rgb.red, target[0]), blend(rgb.green, target[1]), blend(rgb.blue, target[2]));
+};
+
+const getContrastColor = (value: string) => {
+  const rgb = hexToRgb(value);
+
+  if (!rgb) {
+    return '#ffffff';
+  }
+
+  const luminance = (rgb.red * 299 + rgb.green * 587 + rgb.blue * 114) / 1000;
+  return luminance > 150 ? '#111111' : '#ffffff';
+};
+
+const applyThemeFromPreferences = (preferences: { colorPrimary?: string; colorSecondary?: string }) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const root = document.documentElement;
+  const { colorPrimary, colorSecondary } = preferences;
+
+  const applyColor = (prefix: 'primary' | 'secondary', color?: string) => {
+    const normalized = color ? normalizeHexColor(color) : null;
+
+    if (!normalized) {
+      return;
+    }
+
+    const rgb = hexToRgb(normalized);
+    if (!rgb) {
+      return;
+    }
+
+    const shade = mixColor(normalized, [0, 0, 0], 0.12) ?? normalized;
+    const tint = mixColor(normalized, [255, 255, 255], 0.12) ?? normalized;
+    const contrast = getContrastColor(normalized);
+    const contrastRgb = hexToRgb(contrast);
+
+    root.style.setProperty(`--ion-color-${prefix}`, normalized);
+    root.style.setProperty(`--ion-color-${prefix}-rgb`, `${rgb.red}, ${rgb.green}, ${rgb.blue}`);
+    root.style.setProperty(`--ion-color-${prefix}-shade`, shade);
+    root.style.setProperty(`--ion-color-${prefix}-tint`, tint);
+    root.style.setProperty(`--ion-color-${prefix}-contrast`, contrast);
+
+    if (contrastRgb) {
+      root.style.setProperty(`--ion-color-${prefix}-contrast-rgb`, `${contrastRgb.red}, ${contrastRgb.green}, ${contrastRgb.blue}`);
+    }
+  };
+
+  applyColor('primary', colorPrimary);
+  applyColor('secondary', colorSecondary);
+};
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(typeof window !== 'undefined' && localStorage.getItem('isAuthenticated') === 'true');
@@ -224,6 +318,17 @@ const App: React.FC = () => {
 
     window.addEventListener('storage', onStorage);
 
+    const fetchPreferences = async () => {
+      try {
+        const preferences = await getPreferences();
+        applyThemeFromPreferences(preferences);
+      } catch (error) {
+        console.warn('Failed to load app preferences', error);
+      }
+    };
+
+    void fetchPreferences();
+
     return () => {
       window.removeEventListener('storage', onStorage);
       window.clearInterval(intervalId);
@@ -253,7 +358,10 @@ const App: React.FC = () => {
             <Route exact path="/trips">
               {isAuthenticated ? <Trips /> : <Redirect to="/signin" />}
             </Route>
-            <Route path="/trip/:id">
+            <Route path="/trip/:tripId/map" exact>
+              {isAuthenticated ? <TripMap /> : <Redirect to="/signin" />}
+            </Route>
+            <Route path="/trip/:id" exact>
               {isAuthenticated ? <TripDetail /> : <Redirect to="/signin" />}
             </Route>
             <Route path="/ticket/:id">

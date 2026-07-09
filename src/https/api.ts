@@ -151,6 +151,33 @@ export const getBusStops = async (routeId: string,
     })
 }
 
+export interface TripPassengerLocationItem {
+  booking_id: string;
+  booking_reference: string;
+  passenger_name: string;
+  seats: string[];
+  latitude: number;
+  longitude: number;
+  accuracy_m: number;
+  reported_at: string;
+}
+
+export interface TripPassengerLocationsResponse {
+  trip_id: string;
+  status: string;
+  reason: string;
+  shift_started_at: string;
+  passengers: TripPassengerLocationItem[];
+}
+
+export const getTripPassengerLocations = async (tripId: string): Promise<TripPassengerLocationsResponse> => {
+  const response = await api.get(`/trips/${tripId}/passenger-locations`, {
+    headers: getAuthHeaders(),
+  });
+
+  return response.data;
+};
+
 export const checkInSelf = async (ticketNumber: string, qrCode: string) => {
   const response = await api.post(`/checkin/self`, {
     ticketNumber,

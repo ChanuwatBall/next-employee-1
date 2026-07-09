@@ -344,7 +344,7 @@ const TripDetail: React.FC = () => {
               </div>
             </BouceAnimation>
 
-            <PassengerLocationPreview />
+            <PassengerLocationPreview onOpenMap={() => history.push(`/trip/${trip.id}/map`)} />
 
             <br />
             <div style={{ width: "100%" }} >
@@ -512,10 +512,21 @@ const TripDetail: React.FC = () => {
 
 export default TripDetail;
 
-const PassengerLocationPreview: React.FC = () => {
+const PassengerLocationPreview: React.FC<{ onOpenMap: () => void }> = ({ onOpenMap }) => {
   return (
     <BouceAnimation duration={0.4} delay={0.3} className="passenger-location-preview">
-      <div className="passenger-location-map" role="button" tabIndex={0}>
+      <div
+        className="passenger-location-map"
+        role="button"
+        tabIndex={0}
+        onClick={onOpenMap}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onOpenMap();
+          }
+        }}
+      >
         <div className="passenger-location-expand">
           <FontAwesomeIcon icon={faExpand} />
         </div>

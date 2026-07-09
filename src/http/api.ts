@@ -39,6 +39,16 @@ export interface DriverCheckInPayload {
 	qrCode: string;
 }
 
+export interface AppPreferencesResponse {
+	theme: string;
+	colorPrimary: string;
+	colorSecondary: string;
+	mobileappLogoUrl: string;
+	webIconUrl: string;
+	oaTitle: string;
+	oaBackofficeTitle: string;
+}
+
 const getAuthorizationHeader = (token: string) => ({
 	Authorization: `Bearer ${token}`,
 });
@@ -70,6 +80,10 @@ export const driverCheckIn = async <T = unknown>(
 	return response.data;
 };
 
+export const getPreferences = async (): Promise<AppPreferencesResponse> => {
+	const response = await apiClient.get<AppPreferencesResponse>("/preferences");
+	return response.data;
+}
 
 
 export const getBookingDetail = async <T = unknown>(id: string, token: string): Promise<T> => {
