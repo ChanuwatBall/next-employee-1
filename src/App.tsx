@@ -321,6 +321,7 @@ const App: React.FC = () => {
     const fetchPreferences = async () => {
       try {
         const preferences = await getPreferences();
+        console.log('Fetched app preferences', preferences);
         applyThemeFromPreferences(preferences);
       } catch (error) {
         console.warn('Failed to load app preferences', error);

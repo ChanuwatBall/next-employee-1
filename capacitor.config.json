@@ -5,5 +5,9 @@
   "versionName": "0.0.3",
   "bundledWebRuntime": false,
   "webDir": "dist",
-  "plugins": {}
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }

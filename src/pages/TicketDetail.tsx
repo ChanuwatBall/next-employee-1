@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { BouceAnimation } from '../components/Animations';
 import { Ticket } from '../types/Ticket';
-import { checkInSelf, getDriverTripPassengers, getTripDetail, saveCallCustomer } from '../https/api';
+import { checkInSelf, getDriverTripPassengers, getTripDetail, saveCallCustomer } from '../http/api';
 import QRCode from "qrcode";
 import './TicketDetail.css';
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, createPaymentQr, createBooking, getPaymentTransaction, getBookingDetail } from "../https/api";
+import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, createPaymentQr, createBooking, getPaymentTransaction, getBookingDetail } from "../http/api";
 import { useParams, useHistory } from "react-router-dom";
 import {
     IonPage,

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faGasPump, faBatteryThreeQuarters, faCircleInfo, faChevronRight, faWallet, faClipboardList, faCoins } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
-import { getDriverRounds } from '../https/api';
+import { getDriverRounds } from '../http/api';
 import { BouceAnimation } from '../components/Animations';
 import ActivityItemSkeleton from '../components/ActivityItemSkeleton';
 import StatsSkeleton from '../components/StatsSkeleton';
