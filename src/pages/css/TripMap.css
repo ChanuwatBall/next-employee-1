@@ -34,46 +34,69 @@
   border: 0;
 }
 
-.driver-marker-bus {
-  width: 52px;
-  height: 52px;
+.driver-marker-bus { 
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35));
+  /* filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35)); */
 }
 
-.driver-marker-bus svg {
-  width: 100%;
-  height: 100%;
+.driver-marker-bus img {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
+.bus-stop-marker img {
+  width: 2rem;
+  height: 2rem;
+}
 .bus-stop-marker div {
-  background: #0f62fe;
-  color: #ffffff;
-  border-radius: 999px;
-  width: 34px;
-  height: 34px;
+  /* background: #0f62fe; */
+  /* color: #ffffff; */
+  /* border-radius: 999px; */
+  /* width: 34px;
+  height: 34px; */
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
   font-weight: 700;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  /* border: 2px solid #ffffff; */
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); */
+}
+.marker-tooltip{
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 0 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.6);
 }
 
-.passenger-marker div {
-  background: #ff7a00;
-  color: #ffffff;
-  border-radius: 999px;
+.leaflet-tooltip-top.marker-tooltip::before,
+.leaflet-tooltip-bottom.marker-tooltip::before,
+.leaflet-tooltip-left.marker-tooltip::before,
+.leaflet-tooltip-right.marker-tooltip::before {
+  display: none;
+}
+
+.passenger-marker img {
+  /* background: #ff7a00; */
+  /* color: #ffffff; */
+  /* border-radius: 999px; */
   min-width: 52px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.63rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  /* font-size: 0.63rem; */
   font-weight: 700;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  /* border: 2px solid #ffffff; */
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); */
 }

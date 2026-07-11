@@ -118,7 +118,7 @@ export interface AppPreferencesResponse {
 	oaBackofficeTitle: string;
 }
 
-export interface DriverCheckInResponse {
+export interface DriverSellTicketResponse {
   bookingId: string;
   bookingReference: string;
   total: number;
@@ -173,12 +173,24 @@ export const driverCheckIn = async <T = any>(
 //     }
 //   ]
 // }'
-
+interface DriverSellTicketPayload {
+  tripId: string;
+  passengers: {
+      seatNumber: string;
+      fullName: string;
+      phone: string;
+      tierId: string;
+    }[],
+  addOns: {
+      addOnId: string;
+      qty: number;
+    }[]
+}
 export const driverSellTicket = async <T = any>(
-	payload: any,
+	payload: DriverSellTicketPayload,
 	token: string,
-): Promise<DriverCheckInResponse> => {
-	return apiClient.post<DriverCheckInResponse>('/driver/sell', payload, {
+): Promise<DriverSellTicketResponse> => {
+	return apiClient.post<DriverSellTicketResponse>('/driver/sell', payload, {
 		headers: getAuthorizationHeader(token),
 	});
 }
@@ -186,8 +198,51 @@ export const getPreferences = async (): Promise<AppPreferencesResponse> => {
 	return apiClient.get<AppPreferencesResponse>('/preferences');
 };
 
-export const getBookingDetail = async <T = any>(id: string, token?: string): Promise<T> => {
-	return apiClient.get<T>(`/bookings/${id}`, {
+export interface BookingDetail {
+  id: string,
+  bookingReference: string,
+  tripId: string,
+  origin: string,
+  destination: string,
+  date: string,
+  departureTime: string,
+  arrivalTime: string,
+  seats: string[],
+  status: string,
+  paymentStatus: string,
+  expiresAt: string,
+  omiseChargeId: string,
+  total: number,
+  boardingPoint: string,
+  dropOffPoint: string,
+  busType: string,
+  tripType: string,
+  busPlate: string,
+  routeName: string,
+  paymentMethod: string,
+  promoCode: string,
+  discount: number,
+  pricePerSeat: number,
+  bookingDate: string,
+  passengers:{
+      fullName: string,
+      thaiId: string,
+      phone: string,
+      seatNumber: string,
+      passengerType: string	
+    }[],
+  addOns: {
+    name: string,
+    nameEn: string,
+      category: string,
+      qty: number,
+      unitPrice: number,
+      lineTotal: number
+    }[],
+  addonTotal: number
+}
+export const getBookingDetail = async <T = any>(id: string, token?: string): Promise<BookingDetail> => {
+	return apiClient.get<BookingDetail>(`/bookings/${id}`, {
 		headers: token ? getAuthorizationHeader(token) : getAuthHeaders(),
 	});
 };
@@ -266,6 +321,13 @@ export interface Province {
 	name: string;
 	nameEn: string | null;
 	routeIds: string[];
+}
+
+
+export const getRouteTierPrices = async (routeId: string ) => {
+	return apiClient.get(`/admin/routes/${routeId}/tier-prices`, {
+		headers: getAuthHeaders(),
+	});
 }
 
 const getProvinceName = (provinces: Province[], provinceId?: string) => {
@@ -442,8 +504,19 @@ export interface CreateBookingPayload {
 	promoCode: string;
 	omiseChargeId: string;
 }
+export interface CreateBookingResponse {
+  bookingId: string,
+  bookingReference: string,
+  status: string,
+  expiresAt: string,
+  total: number,
+  addonTotal: number,
+  stampRedeemed: boolean,
+  stampDiscount: number,
+  stampsLeft: number
+}
 
-export const createBooking = async (payload: CreateBookingPayload) => {
+export const createBooking = async (payload: CreateBookingPayload): Promise<CreateBookingResponse> => {
 	return apiClient.post(`/bookings`, payload, {
 		headers: {
 			...getAuthHeaders(),
@@ -521,7 +594,7 @@ export const getCallCustomerHistory = async (params: {
 			console.warn('Nova API endpoint /driver/call-customer is not available yet.');
 			return [];
 		}
-		throw err;
+		return [];
 	}
 };
 

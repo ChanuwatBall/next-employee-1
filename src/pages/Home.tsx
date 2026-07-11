@@ -9,14 +9,14 @@ import './css/Home.css';
 import { BouceAnimation } from '../components/Animations';
 
 import { Trip } from '../types/trip';
-import { getDriverTrips, getDriverMe, DriverMeResponse } from '../http/api';
-import { getDriverRounds } from '../https/api';
+import { getDriverTrips, getDriverMe, DriverMeResponse, getDriverRounds } from '../http/api'; 
 import CardTrip from '../components/CardTrip';
 import CardTripSkeleton from '../components/CardTripSkeleton';
 import ActiveShiftSkeleton from '../components/ActiveShiftSkeleton';
 import StatsSkeleton from '../components/StatsSkeleton'; 
 import moment from 'moment-timezone';
 import { t } from 'i18next';
+import { supabase } from '../supabase/client';
 
 // Set default timezone to Bangkok (Asia/Bangkok)
 moment.tz.setDefault('Asia/Bangkok');
@@ -56,6 +56,8 @@ const Home: React.FC = () => {
       const token = session?.access_token;
 
       if (!token) return;
+      const { data: bks } = await supabase.from("bookings").select("*");
+      console.log("bks", bks);
 
       const [tripsData, meData, roundsData] = await Promise.all([
         getDriverTrips(date.format('YYYY-MM-DD'), token),

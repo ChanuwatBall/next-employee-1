@@ -38,9 +38,16 @@ const Sigin: React.FC = () => {
                 password: password
             }
 
-            const loginres = await driverLogin(body)
+            const loginres:any = await driverLogin(body)
             console.log("loginres", loginres);
-
+            if(loginres?.error) {
+                ionalert({
+                    header: 'เข้าสู่ระบบไม่สำเร็จ',
+                    message:  loginres?.error || 'กรุณาตรวจสอบชื่อผู้ใช้งานและรหัสผ่านของคุณอีกครั้ง',
+                    buttons: ['ตกลง']
+                });
+                return;
+            }
             if (rememberMe) {
                 localStorage.setItem('savedUsername', username);
                 localStorage.setItem('savedPassword', password);

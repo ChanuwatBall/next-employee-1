@@ -31,6 +31,21 @@ allprojects {
     }
 }
 
+subprojects {
+    tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_21.toString()
+        targetCompatibility = JavaVersion.VERSION_21.toString()
+    }
+
+    tasks.configureEach { task ->
+        if (task.hasProperty('kotlinOptions')) {
+            task.kotlinOptions {
+                jvmTarget = JavaVersion.VERSION_21.toString()
+            }
+        }
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

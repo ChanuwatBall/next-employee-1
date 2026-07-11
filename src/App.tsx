@@ -18,6 +18,7 @@ import Trips from './pages/Trips';
 import TripDetail from './pages/TripDetail';
 import TripMap from './pages/TripMap';
 import TicketDetail from './pages/TicketDetail';
+import SellTicket from './pages/SellTicket';
 import Sigin from './pages/Sigin';
 import ShiftHistory from './pages/ShiftHistory';
 import CustomTabBar from './components/CustomTabBar';
@@ -343,6 +344,9 @@ const App: React.FC = () => {
           <IonRouterOutlet>
             <Route path="/plan/:id" exact>
               {isAuthenticated ? <PlanChair /> : <Redirect to="/signin" />}
+            </Route>
+            <Route path="/plan/:id/sell" exact>
+              {isAuthenticated ? <SellTicket /> : <Redirect to="/signin" />}
             </Route>
             <Route exact path="/signin">
               <Sigin />

@@ -7,14 +7,14 @@ import React, { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import './css/TripDetail.css';
 import { BouceAnimation } from '../components/Animations';
-
-import { updateDriverLocation, startShift, stopShift, getDriverTripPassengers, getTripDetail, getBusStops } from '../https/api';
+ 
 
 import { Geolocation } from '@capacitor/geolocation';
 import { Device } from '@capacitor/device';
 import { ForegroundService, ServiceType } from '@capawesome-team/capacitor-android-foreground-service';
 import { Capacitor } from '@capacitor/core';
 import TripDetailSkeleton from '../components/TripDetailSkeleton';
+import { getBusStops, getDriverTripPassengers, getTripDetail, startShift, stopShift, updateDriverLocation } from '../http/api';
 
 interface TripData {
   id: string;
@@ -126,7 +126,7 @@ const TripDetail: React.FC = () => {
       if (locationPermission.location !== 'granted' && locationPermission.coarseLocation !== 'granted') {
         throw new Error("Location permission was not granted");
       }
-
+      console.log("Capacitor.getPlatform(): ",Capacitor.getPlatform())
       if (Capacitor.getPlatform() === 'android') {
         const notificationPermission = await ForegroundService.requestPermissions();
         console.log("Foreground service permission: ", JSON.stringify(notificationPermission));

@@ -1,18 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonPage, IonSpinner, IonTitle, IonToolbar } from '@ionic/react';
 import { useParams } from 'react-router-dom';
-import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import L, { type LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './css/TripMap.css';
-import { Geolocation } from '@capacitor/geolocation';
-import {
-  getBusStops,
-  getTripDetail,
-  getTripPassengerLocations,
-  type TripPassengerLocationItem,
-} from '../https/api';
-
+import { Geolocation } from '@capacitor/geolocation'; 
+import { TripPassengerLocationItem, getTripDetail, getTripPassengerLocations, getBusStops } from '../http/api';
+ 
 type Position = {
   lat: number;
   lng: number;
@@ -29,23 +24,21 @@ type BusStopMarker = {
 
 const driverIcon = L.divIcon({
   className: 'driver-marker',
-  html: '<div class="driver-marker-bus" aria-label="driver-bus-marker"><svg viewBox="0 0 64 64" role="img" aria-hidden="true"><path d="M14 10h36c4 0 7 3 7 7v26c0 4-3 7-7 7h-2a6 6 0 0 1-12 0H28a6 6 0 0 1-12 0h-2c-4 0-7-3-7-7V17c0-4 3-7 7-7z" fill="#1f8f42"/><rect x="12" y="16" width="40" height="14" rx="3" fill="#cfeeff"/><rect x="14" y="33" width="36" height="9" rx="2" fill="#e8f5e9"/><circle cx="22" cy="50" r="4" fill="#1f2937"/><circle cx="42" cy="50" r="4" fill="#1f2937"/><circle cx="22" cy="50" r="2" fill="#9ca3af"/><circle cx="42" cy="50" r="2" fill="#9ca3af"/><rect x="16" y="20" width="8" height="7" rx="1" fill="#f8fbff"/><rect x="28" y="20" width="8" height="7" rx="1" fill="#f8fbff"/><rect x="40" y="20" width="8" height="7" rx="1" fill="#f8fbff"/><path d="M34 35h14v4H34z" fill="#34d399"/><path d="M14 35h14v4H14z" fill="#34d399"/></svg></div>',
-  iconSize: [52, 52],
-  iconAnchor: [26, 26],
+  html: '<div class="driver-marker-bus" aria-label="driver-bus-marker"> <img src="/assets/svg/bus.svg" alt="bus" /></div>',
+  iconAnchor: [26, 26], iconSize: [34, 34],
 });
 
 const busStopIcon = L.divIcon({
   className: 'bus-stop-marker',
-  html: '<div>ป้าย</div>',
+  html: '<div><img src="/assets/svg/bus-stop.svg" alt="bus stop" /></div>',
   iconSize: [34, 34],
   iconAnchor: [17, 17],
 });
 
 const passengerIcon = L.divIcon({
   className: 'passenger-marker',
-  html: '<div>ผู้โดยสาร</div>',
-  iconSize: [52, 30],
-  iconAnchor: [26, 15],
+  html: `<div class=" " aria-label="passenger-marker"><img src="/assets/svg/passenger.svg" alt="passenger" /></div>`,
+  iconAnchor: [26, 52],
 });
 
 const isValidCoordinate = (value: unknown) => typeof value === 'number' && Number.isFinite(value);
@@ -128,7 +121,7 @@ const TripMap: React.FC = () => {
         : [];
      console.log("mappedBusStops ", mappedBusStops)
       const mappedPassengers = (passengersData?.passengers || []).filter(
-        (passenger) =>
+        (passenger:any) =>
           isValidCoordinate(passenger.latitude) &&
           isValidCoordinate(passenger.longitude),
       );
@@ -251,36 +244,26 @@ const TripMap: React.FC = () => {
 
             {busStops.map((stop) => (
               <Marker key={stop.id} position={[stop.lat, stop.lng]} icon={busStopIcon}>
-                <Popup>
-                  {stop.name}
-                  <br />
-                  ลำดับจุดจอด: {stop.stopOrder}
-                  <br />
-                  ประเภท: {stop.type}
-                </Popup>
+                <Tooltip className="marker-tooltip" direction="top" offset={[0, -10]} opacity={1} permanent>
+                  {stop.stopOrder} {stop.name}
+                </Tooltip> 
               </Marker>
             ))}
 
             {passengers.map((passenger) => (
-              <React.Fragment key={passenger.booking_id}>
-                <Marker
-                  position={[passenger.latitude, passenger.longitude]}
-                  icon={passengerIcon}
-                >
-                  <Popup>
-                    ผู้โดยสาร: {passenger.passenger_name}
-                    <br />
-                    booking: {passenger.booking_reference}
-                    <br />
-                    seats: {(passenger.seats || []).join(', ') || '-'}
-                  </Popup>
-                </Marker>
-                <Circle
-                  center={[passenger.latitude, passenger.longitude]}
-                  radius={Math.max(passenger.accuracy_m || 0, 5)}
-                  pathOptions={{ color: '#ff7a00', fillOpacity: 0.15 }}
-                />
-              </React.Fragment>
+              <Marker
+                key={passenger.booking_id}
+                position={[passenger.latitude, passenger.longitude]}
+                icon={passengerIcon}
+              >
+                <Popup>
+                  ผู้โดยสาร: {passenger.passenger_name}
+                  <br />
+                  booking: {passenger.booking_reference}
+                  <br />
+                  seats: {(passenger.seats || []).join(', ') || '-'}
+                </Popup>
+              </Marker>
             ))}
           </MapContainer>
         )}
