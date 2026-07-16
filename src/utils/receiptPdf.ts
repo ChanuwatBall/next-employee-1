@@ -1,6 +1,7 @@
 import pdfMakeModule from "pdfmake/build/pdfmake";
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import moment from "moment";
+import * as pdfjsLib from 'pdfjs-dist';
 import { BookingDetail } from "../http/api";
 import { TripDetail } from "../types/trip";
 
@@ -243,11 +244,150 @@ export const createReceiptPdf = async (data: ReceiptPdfData) => {
     return pdfMake.createPdf(buildReceiptDefinition(data));
 };
 
-export const downloadReceiptPdf = async (data: ReceiptPdfData , type: "base64" | "blob") => {
+const convertPdfToImages = async (docDefinition: any) => {
+  // 1. Generate PDF as an ArrayBuffer
+  const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+  const arrayBuffer = await new Promise((resolve) => pdfDocGenerator.getBuffer(resolve));
+
+  // 2. Load the PDF into PDF.js 
+  //@ts-ignore
+  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+  const pdf = await loadingTask.promise;
+  const imageUrls = [];
+
+  // 3. Loop through each page and render to canvas
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 2.0 }); // 2.0 scale increases image quality
+
+    const canvas = document.createElement('canvas');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    const context = canvas.getContext('2d');
+
+    //@ts-ignore
+    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+    // 4. Convert canvas to base64 image URL
+    imageUrls.push(canvas.toDataURL('image/png'));
+  }
+
+  return imageUrls; // Array of base64 PNG images
+}
+export const downloadReceiptPdf = async (data: ReceiptPdfData , type: "base64" | "blob" | "image") => {
     const pdf = await createReceiptPdf(data);
     if (type === "base64") {
         return await pdf.getBase64();
-    } else {
+    } else if (type === "blob") {
         return await pdf.getBlob();
+    }else if (type === "image") {
+        const docDefinition = buildReceiptDefinition(data);
+        return await convertPdfToImages(docDefinition);
     }
 };
+
+// Function to convert a single Image URL/Base64 to an ImageData Bitmap
+export async function urlToBitmap(url:any) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous'; // Prevents CORS issues for external URLs
+    
+    img.onload = () => {
+      // 1. Create a temporary canvas matching image dimensions
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx:any = canvas.getContext('2d');
+      
+      // 2. Draw the image onto the canvas
+      ctx.drawImage(img, 0, 0);
+      
+      // 3. Extract the raw RGBA bitmap pixel data
+      const bitmapData = ctx.getImageData(0, 0, img.width, img.height);
+      resolve(bitmapData);
+    };
+    
+    img.onerror = (err) => reject(err);
+    img.src = url;
+  });
+}
+
+// How to use it with your array of imageUrls
+export async function processImages(imageUrls:any[]) {
+  try {
+    const bitmapPromises = imageUrls.map(url => urlToBitmap(url));
+    const bitmaps = await Promise.all(bitmapPromises);
+    
+    // 'bitmaps' is now an array of ImageData objects containing raw pixel arrays
+    console.log('Successfully converted all pages to bitmaps:', bitmaps);
+    
+    // Example: Access raw pixel data of the first page
+    // const pixelArray = bitmaps[0].data; // Uint8ClampedArray [R, G, B, A, R, G, B, A...]
+    
+  } catch (error) {
+    console.error('Error converting images to bitmap:', error);
+  }
+}
+
+export async function encodeBitmapToEscPos(imageData:any) {
+  const width = imageData.width;
+  const height = imageData.height;
+  const data = imageData.data; // Raw RGBA pixel array
+
+  // ESC/POS requires the width in bytes to be rounded up to a multiple of 8
+  const widthBytes = Math.ceil(width / 8);
+  const imageBuffer = [];
+
+  // Loop through each row (Y) and each column (X)
+  for (let y = 0; y < height; y++) {
+    for (let b = 0; b < widthBytes; b++) {
+      let byteValue = 0;
+
+      // Pack 8 horizontal pixels into a single byte
+      for (let bit = 0; bit < 8; bit++) {
+        const x = b * 8 + bit;
+        
+        if (x < width) {
+          // Calculate the pixel position in the RGBA array
+          const offset = (y * width + x) * 4;
+          const r = data[offset];
+          const g = data[offset + 1];
+          const bVal = data[offset + 2];
+          const a = data[offset + 3];
+
+          // Calculate perceived brightness (Luminance)
+          const brightness = (r * 0.299) + (g * 0.587) + (bVal * 0.114);
+
+          // Transparent pixels (a < 128) or bright pixels (> 128) are White (0)
+          // Dark pixels are Black (1)
+          if (a >= 128 && brightness < 128) {
+            // Set the corresponding bit to 1 (Black pixel)
+            byteValue |= (1 << (7 - bit));
+          }
+        }
+      }
+      imageBuffer.push(byteValue);
+    }
+  }
+
+  // Define ESC/POS GS v 0 Header Command Parameters
+  const xL = widthBytes % 256;      // Width Low byte
+  const xH = Math.floor(widthBytes / 256); // Width High byte
+  const yL = height % 256;     // Height Low byte
+  const yH = Math.floor(height / 256);    // Height High byte
+
+  // Construct final ESC/POS command array
+  const header = [
+    0x1B, 0x40,             // ESC @  -> Initialize Printer
+    0x1D, 0x76, 0x30, 0x00, // GS v 0 m -> Raster Image Command (m=0: Normal size)
+    xL, xH,                 // Number of horizontal bytes
+    yL, yH                  // Number of vertical dots (height)
+  ];
+
+  const footer = [
+    0x1D, 0x56, 0x41, 0x03, // GS V m n -> Feed paper and partial cut
+  ];
+
+  // Merge header, image payload, and footer cutting commands
+  return new Uint8Array([...header, ...imageBuffer, ...footer]);
+}

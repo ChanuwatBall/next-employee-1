@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getRouteTierPrices } from "../http/api";
+import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getRouteTierPrices, getBookingDetail } from "../http/api";
 import { useParams, useHistory } from "react-router-dom";
 import {
     IonPage,
@@ -31,6 +31,12 @@ import { faCircleCheck, faClock } from "@fortawesome/free-solid-svg-icons";
 import { callOutline, thumbsDownOutline, thumbsUpOutline, helpCircleOutline } from "ionicons/icons";
 import { usePhoneCallFlow } from "../hooks/usePhoneCallFlow";
 import QRCode from "qrcode";
+import { supabase } from "../supabase/client";
+import { downloadReceiptPdf, type ReceiptPdfData } from "../utils/receiptPdf";
+import { printReceipt } from "../utils/receiptPrinter";
+import { Capacitor } from "@capacitor/core";
+
+// printing helpers moved to utils/receiptPrinter
 
 // --- Types ---
 type SeatStatus = "available" | "booked" | "unavailable" | "selected";
@@ -358,6 +364,60 @@ const PlanChair: React.FC = () => {
         }
     };
 
+    const printTicket = async (seatData: any) => {
+       if (!seatData) return;
+    //    setIsSaving(true);
+       try {
+           const ticket_number = seatData?.ticket_id?.ticket_number;
+           if (!ticket_number) {
+               throw new Error('ไม่พบหมายเลขตั๋ว');
+           }
+
+           const { data: ticket } = await supabase.from('tickets').select('*').eq('ticket_number', ticket_number).single();
+           if (!ticket?.booking_id) {
+               throw new Error('ไม่พบ booking สำหรับตั๋วนี้');
+           }
+           console.log("ticket ", ticket)
+           // prefer API helper to get full booking detail
+           const bookingDetail = await getBookingDetail(ticket.booking_id);
+
+           // build receipt payload
+           const passengers = (bookingDetail?.passengers && bookingDetail.passengers.length)
+               ? bookingDetail.passengers.map((p: any) => ({ fullName: p.fullName, phone: p.phone, seatNumber: p.seatNumber, passengerType: p.passengerType }))
+               : [{ fullName: ticket?.passenger_name , phone: ticket?.passenger_phone || seatData?.ticket_id?.passenger_phone || '-', seatNumber: ticket?.seat_number  , passengerType: ticket?.passenger_type}];
+
+           const seats = bookingDetail?.seats?.length ? bookingDetail.seats : [seatData?.seat_number || seatData?.ticket_id?.seat_number];
+           const total = bookingDetail?.total ?? Number(seatData?.ticket_id?.price || 0);
+
+           
+           const qrPayload = JSON.stringify({ trip: bookingDetail?.tripId || id, bookingReference: bookingDetail?.bookingReference || bookingDetail?.id || '' });
+           const qrImage = await QRCode.toDataURL(btoa(qrPayload));
+
+           const receiptData: ReceiptPdfData = {
+               bookingDetail: bookingDetail || null,
+               trip,
+               passengers,
+               seats,
+               qrCodeImage: qrImage,
+               bookingReference: bookingDetail?.bookingReference || bookingDetail?.id || ticket.booking_id,
+               paymentMethod: bookingDetail?.paymentMethod || '-',
+               paymentStatus: bookingDetail?.paymentStatus || '-',
+               total: total,
+               pricePerSeat: bookingDetail?.pricePerSeat || Math.round(total / Math.max(passengers.length, 1)),
+           };
+ 
+           // use shared printReceipt which handles Bluetooth ESC/POS on Android and PDF fallback
+           await printReceipt(receiptData, iontoast);
+
+       } catch (err: any) {
+           console.error('Error printing ticket receipt:', err);
+           iontoast({ message: err?.message || 'พิมพ์ใบเสร็จไม่สำเร็จ', duration: 2200, color: 'danger', position: 'top' });
+       } finally {
+        //    setIsSaving(false);
+       }
+       
+    }
+
     return (
         <IonPage>
             <IonHeader className="ion-no-border">
@@ -636,6 +696,12 @@ const PlanChair: React.FC = () => {
                         {/* <IonButton expand="block" fill="solid" color="primary" mode="ios" className="flex-1" onClick={checkInSeat} disabled={!!selectedSeatData?.ticket_id?.checked_in_at || !isToday}>
                             เช็คอินผู้โดยสาร
                         </IonButton> */}
+                        <IonButton expand="block" fill="solid" color="primary" mode="ios" className="flex-1"  
+                        onClick={() => { 
+                            printTicket(selectedSeatData)
+                        }}>
+                            พิมพ์ใบเสร็จตั๋ว
+                        </IonButton>
                         <IonButton expand="block" fill="outline" color="primary" mode="ios" className="flex-1" onClick={() => {
                             presentActionSheet({
                                 header: `ติดต่อผู้โดยสาร`,

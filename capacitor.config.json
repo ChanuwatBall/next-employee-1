@@ -8,6 +8,14 @@
   "plugins": {
     "CapacitorHttp": {
       "enabled": true
+    },
+    "BluetoothLe": {
+      "displayStrings": {
+        "scanning": "Scanning for devices...",
+        "cancel": "Cancel",
+        "availableDevices": "Available devices",
+        "noDeviceFound": "No device found"
+      }
     }
   }
 }

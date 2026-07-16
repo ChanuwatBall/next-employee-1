@@ -37,8 +37,8 @@ import {
 } from "../http/api";
 import { TripDetail } from "../types/trip";
 import { downloadReceiptPdf, ReceiptPdfData } from "../utils/receiptPdf";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Printer } from '@capgo/capacitor-printer';
+import { printReceipt } from "../utils/receiptPrinter";
+// printing handled by utils/receiptPrinter
 import "./css/PlanChair.css";
 import { Capacitor } from "@capacitor/core";
 
@@ -302,47 +302,20 @@ const SellTicket: React.FC = () => {
         return dataUrl.split(",")[1] || "";
     };
 
-    const printReceiptPdf = async (pdfBase64: string, reference: string) => {
-        const safeReference = reference || "receipt";
-        const fileName = `receipt/${safeReference}.pdf`;
-
-        if (Capacitor.getPlatform() === "android") {
-            const base64Data = pdfBase64;
-            const filestore = await Filesystem.writeFile({
-                path: fileName,
-                data: base64Data,
-                directory: Directory.Cache,
-                recursive: true,
-            });
-
-            await Printer.printPdf({
-                name: fileName,
-                path: filestore.uri,
-            }) 
-
-            return;
-        }
-        const pdfBlob = await fetch(`data:application/pdf;base64,${pdfBase64}`).then((res) => res.blob());
-        const pdffile = new File([pdfBlob], `${safeReference}.pdf`, { type: "application/pdf" });
-        const url = URL.createObjectURL(pdffile);
-        await Printer.printPdf({
-            name: fileName,
-            path: url,
-        });
-        URL.revokeObjectURL(url);
-    };
+    // printing helpers moved to utils/receiptPrinter
 
     const downloadCurrentReceipt = async () => {
         if (!bookingDetail || !ticketQrCodeImage) return;
 
         try {
-            const pdfbase64 = await downloadReceiptPdf(buildReceiptData(
+            const receiptData = buildReceiptData(
                 bookingDetail,
                 salePaymentMethod,
                 ticketQrCodeImage,
                 bookingDetail.bookingReference || saleBookingReference,
-            ), "base64");
-            await printReceiptPdf(pdfbase64, bookingDetail.bookingReference || saleBookingReference);
+            );
+            // print (handles Android Bluetooth ESC/POS and PDF fallback)
+            await printReceipt(receiptData, iontoast);
 
         } catch (err) {
             console.error("Receipt PDF error:", err);
@@ -368,8 +341,11 @@ const SellTicket: React.FC = () => {
         setSalePaymentMethod(method);
         setSaleStep("success");
 
-        const pdfbase64 = await downloadReceiptPdf(receiptData, "base64");
-        await printReceiptPdf(pdfbase64, detail?.bookingReference || bookingReference);
+        try {
+            await printReceipt(receiptData, iontoast);
+        } catch (err) {
+            console.warn('Print failed:', err);
+        }
     };
 
     const startQrPayment = async () => {

@@ -34,3 +34,6 @@ project(':capawesome-team-capacitor-android-foreground-service').projectDir = ne
 
 include ':capgo-capacitor-printer'
 project(':capgo-capacitor-printer').projectDir = new File('../node_modules/@capgo/capacitor-printer/android')
+
+include ':e-is-capacitor-bluetooth-serial'
+project(':e-is-capacitor-bluetooth-serial').projectDir = new File('../node_modules/@e-is/capacitor-bluetooth-serial/android')

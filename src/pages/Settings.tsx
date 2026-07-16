@@ -20,16 +20,16 @@ import {
   IonText,
   IonTitle,
   IonToolbar,
-  useIonToast,
 } from '@ionic/react';
-import { BluetoothSerial, BluetoothDevice } from '@e-is/capacitor-bluetooth-serial';
 import {
   bluetoothOutline,
   checkmarkCircleOutline,
   chevronForwardOutline,
+  closeCircleOutline,
   printOutline,
   refreshOutline,
 } from 'ionicons/icons';
+import { useBluetoothPrinter, BluetoothDevice } from '../hooks/useBluetoothPrinter';
 
 const PRINTER_STORAGE_KEY = 'selected_printer_device';
 
@@ -40,11 +40,9 @@ type SavedPrinter = {
 };
 
 const Settings: React.FC = () => {
-  const [toast] = useIonToast();
+  const { devices, scanning, connectedAddress, scan, connect, disconnect, requestPermission } = useBluetoothPrinter();
   const [showPrinterModal, setShowPrinterModal] = useState(false);
-  const [scanning, setScanning] = useState(false);
   const [connectingAddress, setConnectingAddress] = useState<string | null>(null);
-  const [devices, setDevices] = useState<BluetoothDevice[]>([]);
   const [savedPrinter, setSavedPrinter] = useState<SavedPrinter | null>(null);
 
   useEffect(() => {
@@ -60,104 +58,54 @@ const Settings: React.FC = () => {
 
   const sortedDevices = useMemo(() => {
     return [...devices].sort((left, right) => {
-      const leftName = left.name?.trim() || left.address;
-      const rightName = right.name?.trim() || right.address;
+      const leftName = left.name?.trim() || left.address || '';
+      const rightName = right.name?.trim() || right.address || '';
       return leftName.localeCompare(rightName);
     });
   }, [devices]);
 
   const savePrinter = (device: BluetoothDevice) => {
     const payload: SavedPrinter = {
-      name: device.name?.trim() || device.address,
-      id: device.id,
-      address: device.address,
+      name: device.name?.trim() || device.address || '',
+      id: device.id || '',
+      address: device.address || '',
     };
 
     localStorage.setItem(PRINTER_STORAGE_KEY, JSON.stringify(payload));
     setSavedPrinter(payload);
   };
 
-  const ensureBluetoothReady = async () => {
-    const state = await BluetoothSerial.isEnabled();
-    if (state.enabled) {
-      return true;
-    }
-
-    const canEnable = await BluetoothSerial.canEnable();
-    if (!canEnable.enabled) {
-      toast({
-        message: 'อุปกรณ์นี้ไม่รองรับการเปิด Bluetooth ผ่านแอป',
-        duration: 2200,
-        color: 'danger',
-        position: 'top',
-      });
-      return false;
-    }
-
-    const enabled = await BluetoothSerial.enable();
-    return enabled.enabled;
-  };
-
-  const scanBluetoothDevices = async () => {
-    setScanning(true);
-    try {
-      const ready = await ensureBluetoothReady();
-      if (!ready) {
-        return;
-      }
-
-      const result = await BluetoothSerial.scan();
-      setDevices(result.devices || []);
-      if (!result.devices?.length) {
-        toast({
-          message: 'ไม่พบอุปกรณ์ Bluetooth',
-          duration: 1800,
-          color: 'medium',
-          position: 'top',
-        });
-      }
-    } catch (error) {
-      console.error('Bluetooth scan failed', error);
-      toast({
-        message: 'สแกน Bluetooth ไม่สำเร็จ',
-        duration: 2200,
-        color: 'danger',
-        position: 'top',
-      });
-    } finally {
-      setScanning(false);
-    }
-  };
-
   const openPrinterModal = async () => {
+    // ขอ permission ก่อนเปิด modal
+    const granted = await requestPermission();
+    if (!granted) {
+      return;
+    }
+
     setShowPrinterModal(true);
     if (!devices.length) {
-      await scanBluetoothDevices();
+      await scan();
     }
   };
 
   const connectDevice = async (device: BluetoothDevice) => {
+    if (!device.address) return;
+    
     setConnectingAddress(device.address);
     try {
-      await BluetoothSerial.connect({ address: device.address });
-      savePrinter(device);
-      toast({
-        message: `เชื่อมต่อกับ ${device.name?.trim() || device.address} แล้ว`,
-        duration: 2200,
-        color: 'success',
-        position: 'top',
-      });
-    } catch (error) {
-      console.error('Bluetooth connect failed', error);
-      toast({
-        message: 'เชื่อมต่ออุปกรณ์ไม่สำเร็จ',
-        duration: 2200,
-        color: 'danger',
-        position: 'top',
-      });
+      const success = await connect(device.address);
+      if (success) {
+        savePrinter(device);
+      }
     } finally {
       setConnectingAddress(null);
     }
+  };
+
+  const disconnectPrinter = async () => {
+    await disconnect();
+    localStorage.removeItem(PRINTER_STORAGE_KEY);
+    setSavedPrinter(null);
   };
 
   return (
@@ -202,7 +150,7 @@ const Settings: React.FC = () => {
               </IonButtons>
               <IonTitle>Bluetooth Printer</IonTitle>
               <IonButtons slot="end">
-                <IonButton onClick={scanBluetoothDevices} disabled={scanning}  style={{fontSize: '.8em'}}>
+                <IonButton onClick={scan} disabled={scanning}  style={{fontSize: '.8em'}}>
                   <IonIcon slot="start" icon={refreshOutline} />
                   <IonLabel >สแกนใหม่</IonLabel>
                 </IonButton>
@@ -211,7 +159,7 @@ const Settings: React.FC = () => {
           </IonHeader>
 
           <IonContent className="ion-padding">
-            <IonButton expand="block" onClick={scanBluetoothDevices} disabled={scanning}>
+            <IonButton expand="block" onClick={scan} disabled={scanning}>
               {scanning ? <IonSpinner name="crescent" slot="start" /> : <IonIcon icon={bluetoothOutline} slot="start" />}
               {scanning ? 'กำลังสแกน Bluetooth...' : 'สแกนอุปกรณ์ Bluetooth'}
             </IonButton>
@@ -219,11 +167,19 @@ const Settings: React.FC = () => {
             {savedPrinter && (
               <IonCard style={{ marginTop: 16 }}>
                 <IonCardContent>
-                  <IonText color="success">
-                    <p style={{ margin: 0 }}>
-                      เครื่องที่บันทึกไว้: {savedPrinter.name} ({savedPrinter.address})
-                    </p>
-                  </IonText>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                      <IonText color="success">
+                        <p style={{ margin: 0 }}>
+                          เครื่องที่บันทึกไว้: {savedPrinter.name} ({savedPrinter.address})
+                        </p>
+                      </IonText>
+                    </div>
+                    <IonButton size="small" color="danger" onClick={disconnectPrinter}>
+                      <IonIcon slot="start" icon={closeCircleOutline} />
+                      ยกเลิก
+                    </IonButton>
+                  </div>
                 </IonCardContent>
               </IonCard>
             )}
@@ -265,3 +221,4 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
+
