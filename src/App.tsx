@@ -14,6 +14,7 @@ import { ellipse, home, square, triangle } from 'ionicons/icons';
 import Home from './pages/Home';
 import ScanQrPage from './pages/ScanQrPage';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import Trips from './pages/Trips';
 import TripDetail from './pages/TripDetail';
 import TripMap from './pages/TripMap';
@@ -359,6 +360,9 @@ const App: React.FC = () => {
             </Route>
             <Route path="/profile">
               {isAuthenticated ? <Profile /> : <Redirect to="/signin" />}
+            </Route>
+            <Route exact path="/settings">
+              {isAuthenticated ? <Settings /> : <Redirect to="signin" />}
             </Route>
             <Route exact path="/trips">
               {isAuthenticated ? <Trips /> : <Redirect to="/signin" />}

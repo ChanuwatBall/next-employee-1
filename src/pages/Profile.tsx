@@ -23,6 +23,7 @@ import {
   IonRefresherContent,
 } from '@ionic/react';
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import {
   callOutline,
   cardOutline,
@@ -41,7 +42,8 @@ import {
   alertCircleOutline,
   chevronForwardOutline,
   headsetOutline,
-  shieldCheckmarkOutline, 
+  shieldCheckmarkOutline,
+  settingsOutline, 
 } from 'ionicons/icons';
 import { getDriverMe, DriverMeResponse, updateDriverMe } from '../http/api';
 import './css/Profile.css';
@@ -50,6 +52,7 @@ import { faBus, faCoins } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const Profile: React.FC = () => {
+  const history = useHistory();
   const [data, setData] = useState<DriverMeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,6 +161,9 @@ const Profile: React.FC = () => {
             <IonBackButton color="dark" defaultHref="/home" />
           </IonButtons>
           <IonTitle>โปรไฟล์</IonTitle>
+          <IonButton fill="clear" slot="end" color={"dark"} onClick={() => history.push('/settings')}>
+             <IonIcon icon={settingsOutline} />
+          </IonButton>
         </IonToolbar>
       </IonHeader>
 
@@ -246,7 +252,7 @@ const Profile: React.FC = () => {
               <div className="info-row">
                 <div className="label">อีเมล</div>
                 <div className="value">{data.user.email || '-'}</div>
-              </div>
+              </div>  
             </section>}
 
             <IonModal isOpen={showEditModal} initialBreakpoint={0.8} onDidDismiss={() => setShowEditModal(false)}>
