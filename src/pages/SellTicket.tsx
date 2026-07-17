@@ -41,6 +41,7 @@ import { printReceipt } from "../utils/receiptPrinter";
 // printing handled by utils/receiptPrinter
 import "./css/PlanChair.css";
 import { Capacitor } from "@capacitor/core";
+import ReceiptModal from "../components/Receipt";
 
 type SaleStep = "form" | "summary" | "cash" | "qrcode" | "success" | "failed";
 type SalePaymentMethod = "cash" | "qrcode" | null;
@@ -123,6 +124,8 @@ const SellTicket: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const qrDeadlineRef = useRef<number | null>(null);
     const qrPollCountRef = useRef(0);
+    const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+    const [receiptData, setReceiptData] = useState<ReceiptPdfData | null>(null);
 
     const selectedSeatNumbers = useMemo(() => (
         querySeats
@@ -291,18 +294,7 @@ const SellTicket: React.FC = () => {
         };
     };
 
-    const blobToBase64 = async (blob: Blob): Promise<string> => {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(`${reader.result || ""}`);
-            reader.onerror = () => reject(new Error("Unable to convert PDF blob to base64"));
-            reader.readAsDataURL(blob);
-        });
-
-        return dataUrl.split(",")[1] || "";
-    };
-
-    // printing helpers moved to utils/receiptPrinter
+ 
 
     const downloadCurrentReceipt = async () => {
         if (!bookingDetail || !ticketQrCodeImage) return;
@@ -315,13 +307,17 @@ const SellTicket: React.FC = () => {
                 bookingDetail.bookingReference || saleBookingReference,
             );
             // print (handles Android Bluetooth ESC/POS and PDF fallback)
-            await printReceipt(receiptData, iontoast);
+            // await printReceipt(receiptData, iontoast);
+            setReceiptData(receiptData);
+            setIsReceiptModalOpen(true);
 
         } catch (err) {
             console.error("Receipt PDF error:", err);
             iontoast({ message: "สร้างใบเสร็จ PDF ไม่สำเร็จ", duration: 2200, color: "danger", position: "top" });
         }
     };
+
+    
 
     const setSuccessFromBookingDetail = async (detail: BookingDetail, method: SalePaymentMethod, fallbackReference?: string) => {
         const tripId = detail?.tripId || id;
@@ -342,7 +338,9 @@ const SellTicket: React.FC = () => {
         setSaleStep("success");
 
         try {
-            await printReceipt(receiptData, iontoast);
+            // await printReceipt(receiptData, iontoast);
+            setReceiptData(receiptData);
+            setIsReceiptModalOpen(true);
         } catch (err) {
             console.warn('Print failed:', err);
         }
@@ -860,6 +858,11 @@ const SellTicket: React.FC = () => {
                     )}
                 </div>
             </IonContent>
+            <ReceiptModal 
+                receiptData={receiptData} // Replace 'receiptData' with your actual receipt data variable
+                open={isReceiptModalOpen} // Replace 'isReceiptModalOpen' with your actual state variable
+                setOpen={setIsReceiptModalOpen} // Replace 'setIsReceiptModalOpen' with your actual state setter
+            />
 
             <IonLoading isOpen={isLoading} message="กำลังโหลดข้อมูลเตรียมขาย..." />
             <IonLoading isOpen={isSaving} message="กำลังบันทึกข้อมูล..." />

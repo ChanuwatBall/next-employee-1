@@ -3,6 +3,7 @@ import { Printer } from '@capgo/capacitor-printer';
 import { Capacitor } from '@capacitor/core';
 import { BluetoothSerial, BluetoothWriteOptions } from '@e-is/capacitor-bluetooth-serial';
 // Note: remove Node-specific fs and pdf2pic which don't run in Capacitor/web runtime.
+import * as pdfjsLib from 'pdfjs-dist';
 
 const uint8ToBase64 = (bytes: Uint8Array) => {
     let binary = '';
@@ -173,12 +174,12 @@ export const printReceipt = async (data: ReceiptPdfData, iontoast?: any) => {
             try {
                 const pdfBase64ToPngDataUrl = async (base64: string) => {
                     const pdfData = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-                    const pdfjsLib: any = await import('pdfjs-dist/legacy/build/pdf');
+                    // const pdfjsLib: any = await import('pdfjs-dist/legacy/build/pdf');
                     // Ensure workerSrc is set. Try to import the bundled worker entry first,
                     // otherwise fall back to a CDN copy of the worker.
                     try {
-                        const pdfjsWorker: any = await import('pdfjs-dist/legacy/build/pdf.worker.entry');
-                        pdfjsLib.GlobalWorkerOptions.workerSrc = (pdfjsWorker && (pdfjsWorker.default || pdfjsWorker)) as any;
+                        // const pdfjsWorker: any = await import('pdfjs-dist/legacy/build/pdf.worker.entry');
+                        // pdfjsLib.GlobalWorkerOptions.workerSrc = (pdfjsWorker && (pdfjsWorker.default || pdfjsWorker)) as any;
                     } catch (e) {
                         // fallback to CDN (matches typical pdf.js releases). Replace version if needed.
                         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -194,7 +195,7 @@ export const printReceipt = async (data: ReceiptPdfData, iontoast?: any) => {
                     if (!ctx) throw new Error('Canvas 2D context unavailable for PDF render');
                     canvas.width = Math.round(viewport.width);
                     canvas.height = Math.round(viewport.height);
-                    await page.render({ canvasContext: ctx, viewport }).promise;
+                    // await page.render({ canvasContext: ctx, viewport }).promise;
                     return canvas.toDataURL('image/png');
                 };
 

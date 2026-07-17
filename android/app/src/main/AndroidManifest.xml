@@ -62,7 +62,8 @@
 
     <!-- Permissions -->
 
-    <uses-permission android:name="android.permission.INTERNET" /><uses-permission
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission
     android:name="android.permission.BLUETOOTH"
     android:maxSdkVersion="30" />
     <uses-permission

@@ -1,0 +1,52 @@
+#receipt-content{
+     width: 384px;
+}
+#receipt-content ion-label ,
+#receipt-content ion-text {
+    font-size: .85em !important;
+}
+small {
+    font-size: .6em !important;
+}
+h2 {
+    font-size: 1.2em !important;
+    font-weight: 600;
+}
+h3 {
+    font-size: 1em !important;
+    font-weight: 600;
+}
+.booking-ref-num {
+    font-size: .7em !important;
+    font-weight: 600;
+}
+.booking-ref-date {
+    font-size: .7em !important; 
+}
+.qr-img{
+    width: 60vw;
+}
+ion-label.bold {
+    font-weight: 500; 
+}
+.trip-detail ion-col{ 
+    padding: 0.1em 0;
+    font-size: .9em !important; 
+}
+.conditions {
+    margin-top: 1em;
+}
+.conditions-title{
+    font-size: 0.7em !important;
+    /* font-weight: 600; */
+    margin-bottom: 0.2em;
+}
+.receipt-title{
+    font-size: 1.2em !important;
+    font-weight: 600;
+}
+.condition-text{
+    display: block;
+    font-size: 0.65em !important;
+    margin-bottom: 0.2em;
+}

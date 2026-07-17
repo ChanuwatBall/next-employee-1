@@ -35,6 +35,7 @@ import { supabase } from "../supabase/client";
 import { downloadReceiptPdf, type ReceiptPdfData } from "../utils/receiptPdf";
 import { printReceipt } from "../utils/receiptPrinter";
 import { Capacitor } from "@capacitor/core";
+import ReceiptModal from "../components/Receipt";
 
 // printing helpers moved to utils/receiptPrinter
 
@@ -167,6 +168,8 @@ const PlanChair: React.FC = () => {
     const [presentActionSheet] = useIonActionSheet();
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [receiptData, setReceiptData] = useState<any>(null);
+    const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
     const { startCall, showResultSheet, setShowResultSheet, submitCallResult, currentPhone, metadata } = usePhoneCallFlow<SeatDetail>();
 
@@ -405,9 +408,11 @@ const PlanChair: React.FC = () => {
                total: total,
                pricePerSeat: bookingDetail?.pricePerSeat || Math.round(total / Math.max(passengers.length, 1)),
            };
- 
+            console.log("receiptData ", receiptData)
+            setReceiptData(receiptData);
+            setIsReceiptModalOpen(true);
            // use shared printReceipt which handles Bluetooth ESC/POS on Android and PDF fallback
-           await printReceipt(receiptData, iontoast);
+        //    await printReceipt(receiptData, iontoast);
 
        } catch (err: any) {
            console.error('Error printing ticket receipt:', err);
@@ -542,7 +547,11 @@ const PlanChair: React.FC = () => {
                     </IonButton>
                 </div>
             )}
-
+            <ReceiptModal 
+                receiptData={receiptData} // Replace 'receiptData' with your actual receipt data variable
+                open={isReceiptModalOpen} // Replace 'isReceiptModalOpen' with your actual state variable
+                setOpen={setIsReceiptModalOpen} // Replace 'setIsReceiptModalOpen' with your actual state setter
+            />
             <IonModal
                 isOpen={showSeatModal}
                 initialBreakpoint={0.9}
