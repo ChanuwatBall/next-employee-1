@@ -143,7 +143,7 @@ const Trips: React.FC = () => {
                   totalPassenger={trip.totalSeats}
                   isOnBoard={moment(`${trip.date} ${trip?.departureTime}`).isBefore(moment()) && moment(`${trip.date} ${trip?.arrivalTime}`).isAfter(moment())}
                   isEnded={moment(`${trip.date} ${trip?.arrivalTime}`).isBefore(moment())}
-                  select={() => history.push(`/trip/${trip.tripId}`)}
+                  select={() => {history.push(`/trip/${trip.tripId}`); localStorage.setItem('company', JSON.stringify(trip?.company));}}
                 />
               </BouceAnimation>
             ))

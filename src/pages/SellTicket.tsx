@@ -36,8 +36,8 @@ import {
     getTripSeats,
 } from "../http/api";
 import { TripDetail } from "../types/trip";
-import { downloadReceiptPdf, ReceiptPdfData } from "../utils/receiptPdf";
-import { printReceipt } from "../utils/receiptPrinter";
+// import { downloadReceiptPdf, ReceiptPdfData } from "../utils/receiptPdf";
+// import { printReceipt } from "../utils/receiptPrinter";
 // printing handled by utils/receiptPrinter
 import "./css/PlanChair.css";
 import { Capacitor } from "@capacitor/core";
@@ -97,7 +97,7 @@ const normalizePaymentMethod = (method: SalePaymentMethod) => {
 
 const SellTicket: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const history = useHistory();
+    const history: any = useHistory();
     const location = useLocation<SellTicketLocationState | undefined>();
     const [iontoast] = useIonToast();
     const querySeats = new URLSearchParams(location.search).get("seats") || "";
@@ -125,7 +125,8 @@ const SellTicket: React.FC = () => {
     const qrDeadlineRef = useRef<number | null>(null);
     const qrPollCountRef = useRef(0);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
-    const [receiptData, setReceiptData] = useState<ReceiptPdfData | null>(null);
+    const [receiptData, setReceiptData] = useState<any>(null);
+    const [company, setCompany] = useState<any>(null);
 
     const selectedSeatNumbers = useMemo(() => (
         querySeats
@@ -150,6 +151,11 @@ const SellTicket: React.FC = () => {
 
     useEffect(() => {
         const fetchSaleContext = async () => {
+
+            const companyState = JSON.parse(localStorage.getItem('company') || 'null');
+            console.log("company from state: ", companyState);
+            if (companyState) setCompany(companyState);
+
             setIsLoading(true);
             try {
                 const [tripData, seatData] = await Promise.all([
@@ -266,7 +272,7 @@ const SellTicket: React.FC = () => {
         method: SalePaymentMethod,
         qrImage: string,
         bookingReference: string,
-    ): ReceiptPdfData => {
+    ): any => {
         const passengers = detail?.passengers?.length
             ? detail.passengers
             : saleSummaryItems.map((item) => ({
@@ -405,8 +411,9 @@ const SellTicket: React.FC = () => {
             };
 
             const result: DriverSellTicketResponse = await driverSellTicket(payload, session?.access_token);
+             console.error("Cash payment result :", result);
             if (!result?.bookingId) {
-                throw new Error("ไม่พบรหัส booking หลังขายตั๋ว");
+                
             }
 
             setSaleBookingId(result.bookingId);
@@ -862,6 +869,7 @@ const SellTicket: React.FC = () => {
                 receiptData={receiptData} // Replace 'receiptData' with your actual receipt data variable
                 open={isReceiptModalOpen} // Replace 'isReceiptModalOpen' with your actual state variable
                 setOpen={setIsReceiptModalOpen} // Replace 'setIsReceiptModalOpen' with your actual state setter
+                company={company}
             />
 
             <IonLoading isOpen={isLoading} message="กำลังโหลดข้อมูลเตรียมขาย..." />

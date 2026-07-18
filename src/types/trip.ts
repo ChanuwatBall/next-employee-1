@@ -29,7 +29,14 @@ export interface Trip {
     "status": "scheduled",
     "totalPassengers": 1,
     "checkedIn": 0,
-    "totalSeats": 40
+    "totalSeats": 40,
+    "company":{
+        "name": string,
+        "address": string,
+        "phone": string,
+        "taxId": string,
+        "ticketTerms": string
+    }
 } 
 export interface TripDetail {
   id: string;

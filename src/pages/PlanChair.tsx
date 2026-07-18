@@ -159,7 +159,7 @@ export function isSpecialCell(label: string | null): boolean {
 // --- Main Page ---
 const PlanChair: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const history = useHistory();
+    const history: any = useHistory();
     const [trip, setTrip] = useState<TripDetail | null>(null);
     const [seats, setSeats] = useState<Seat[]>([]);
     const [showSeatModal, setShowSeatModal] = useState(false);
@@ -170,6 +170,7 @@ const PlanChair: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [receiptData, setReceiptData] = useState<any>(null);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+    const [company, setCompany] = useState<any>(null);
 
     const { startCall, showResultSheet, setShowResultSheet, submitCallResult, currentPhone, metadata } = usePhoneCallFlow<SeatDetail>();
 
@@ -189,6 +190,10 @@ const PlanChair: React.FC = () => {
     const fetchTripAndSeats = async () => {
         setIsLoading(true);
         try {
+            const companyState = JSON.parse(localStorage.getItem('company') || 'null');
+            console.log("company from state: ", companyState);
+           if (companyState) setCompany(companyState);
+
             const passengers: any[] = await getDriverTripPassengers(id);
             console.log("passengers ", passengers);
 
@@ -551,6 +556,7 @@ const PlanChair: React.FC = () => {
                 receiptData={receiptData} // Replace 'receiptData' with your actual receipt data variable
                 open={isReceiptModalOpen} // Replace 'isReceiptModalOpen' with your actual state variable
                 setOpen={setIsReceiptModalOpen} // Replace 'setIsReceiptModalOpen' with your actual state setter
+                company={company}
             />
             <IonModal
                 isOpen={showSeatModal}

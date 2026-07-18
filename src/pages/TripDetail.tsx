@@ -31,7 +31,7 @@ interface TripData {
 
 const TripDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const history = useHistory();
+  const history:any = useHistory();
   const [stationacc, setStationAcc] = React.useState<string>("");
   const [trip, setTrip] = React.useState<TripData | null>(null);
 
@@ -194,7 +194,8 @@ const TripDetail: React.FC = () => {
     }
   };
 
-  const getTrip = async () => {
+  const getTrip = async () => { 
+    
     const [passengers, tripData]: [any[], any] = await Promise.all([
       getDriverTripPassengers(id),
       getTripDetail(id)
@@ -381,7 +382,7 @@ const TripDetail: React.FC = () => {
           </div>
           <div className='bottom-div ion-padding-horizontal' >
             <IonButton expand='block' mode='ios' className="text-light rounded-4xl" style={{ color: "#FFF" }}
-              onClick={() => { history.push("/plan/" + trip?.id) }} >
+              onClick={() => { history.push("/plan/" + trip?.id, { company:  history.location.state?.company  }) }} >
               ที่นั่งทั้งหมด
             </IonButton>
           </div>

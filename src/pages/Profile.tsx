@@ -233,13 +233,17 @@ const Profile: React.FC = () => {
                 <div className="label">ชื่อ-สกุล</div>
                 <div className="value">{data.driver.name}</div>
               </div>
-              <div className="info-row">
+              {/* <div className="info-row">
                 <div className="label">เลขประจำตัวประชาชน</div>
                 <div className="value">{data.user.national_id || '-'}</div>
-              </div>
+              </div> */}
               <div className="info-row">
                 <div className="label">ใบขับขี่</div>
                 <div className="value">{data.driver.license_number}</div>
+              </div>
+              <div className="info-row">
+                <div className="label">วันหมดอายุใบขับขี่</div>
+                <div className="value">{data.driver.license_expiry}</div>
               </div>
               <div className="info-row">
                 <div className="label">เบอร์โทร</div>
@@ -340,23 +344,23 @@ const Profile: React.FC = () => {
                 </div>
                 <IonIcon icon={chevronForwardOutline} className="menu-item-arrow" />
               </a>
-              <a href="tel:0800000000" className="menu-item admin-support-item">
+              <a href={`tel:${data?.driver?.insurance_phone}"`} className="menu-item admin-support-item">
                 <div className="menu-item-icon support">
                   <IonIcon icon={headsetOutline} />
                 </div>
                 <div className="menu-item-content">
                   <div className="menu-item-label">ติดต่อ Admin Support</div>
-                  <div className="menu-item-sub">080-000-0000 · แจ้งปัญหาการใช้งาน</div>
+                  <div className="menu-item-sub">{data?.driver?.insurance_company} แจ้งปัญหาการใช้งาน</div>
                 </div>
                 <IonIcon icon={chevronForwardOutline} className="menu-item-arrow" />
               </a>
-              <a href="tel:0801234567" className="menu-item insurance-item">
+              <a href={`tel:${data?.driver?.insurance_phone}"`} className="menu-item insurance-item">
                 <div className="menu-item-icon insurance">
                   <IonIcon icon={shieldCheckmarkOutline} />
                 </div>
                 <div className="menu-item-content">
                   <div className="menu-item-label">ติดต่อ Insurance</div>
-                  <div className="menu-item-sub">080-123-4567 · ข้อมูลประกันภัย</div>
+                  <div className="menu-item-sub">{data?.driver?.insurance_company} · ข้อมูลประกันภัย</div>
                 </div>
                 <IonIcon icon={chevronForwardOutline} className="menu-item-arrow" />
               </a>

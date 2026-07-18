@@ -14,7 +14,7 @@ import './TicketDetail.css';
 
 const TicketDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const history = useHistory();
+  const history:any = useHistory();
   const [actionSheet] = useIonActionSheet();
   const [booking, setBooking] = useState<any | null>(null);
   const [ionalert, dimissIonAlert] = useIonAlert();
@@ -185,7 +185,6 @@ const TicketDetail: React.FC = () => {
         //     return;
         //   }
         // }
-
         const passengers: any = await getDriverTripPassengers(qrDetail.trip)
         const tripData = await getTripDetail(qrDetail.trip)
 

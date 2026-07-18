@@ -151,8 +151,8 @@ const Home: React.FC = () => {
 
                 <div
                   className="stat-card glass shadow-sm text-white relative"
-                  onClick={() => { if (totalStats.alerts && totalStats.alerts.length > 0) setShowAlertModal(true); }}
-                  style={{ cursor: totalStats.alerts && totalStats.alerts.length > 0 ? 'pointer' : 'default', position: 'relative' }}
+                  onClick={() => { if (driverMe?.alerts && driverMe.alerts.length > 0) setShowAlertModal(true); }}
+                  style={{ cursor: driverMe?.alerts && driverMe?.alerts.length > 0 ? 'pointer' : 'default', position: 'relative' }}
                 >
 
                   <div className="stat-label  text-white larger" ><IonText  >
@@ -263,7 +263,7 @@ const Home: React.FC = () => {
                   totalPassenger={trip.totalSeats}
                   isOnBoard={moment(`${trip.date} ${trip?.departureTime}`).isBefore(moment()) && moment(`${trip.date} ${trip?.arrivalTime}`).isAfter(moment())}
                   isEnded={moment(`${trip.date} ${trip?.arrivalTime}`).isBefore(moment())}
-                  select={() => history.push(`/trip/${trip.tripId}`)}
+                  select={() => {history.push(`/trip/${trip.tripId}` ) ; localStorage.setItem('company', JSON.stringify(trip?.company));}}
                   busNumber={trip.busNumber}
                 />
               </BouceAnimation>

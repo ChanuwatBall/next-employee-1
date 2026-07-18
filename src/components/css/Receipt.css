@@ -1,13 +1,14 @@
 #receipt-content{
      width: 384px;
 }
+#receipt-content small {
+    font-size: .8em !important;
+}
 #receipt-content ion-label ,
 #receipt-content ion-text {
-    font-size: .85em !important;
+    font-size: .9em !important;
 }
-small {
-    font-size: .6em !important;
-}
+ 
 h2 {
     font-size: 1.2em !important;
     font-weight: 600;
@@ -49,4 +50,9 @@ ion-label.bold {
     display: block;
     font-size: 0.65em !important;
     margin-bottom: 0.2em;
+}
+
+.dashed-bottom{
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 0.5em;
 }
