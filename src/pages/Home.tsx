@@ -1,7 +1,7 @@
-import { IonChip, IonContent, IonHeader, IonLabel, IonLoading, IonPage, IonSearchbar, IonSegment, IonSegmentButton, IonText, IonToolbar, IonButton, IonProgressBar, IonBadge, IonRefresher, IonRefresherContent, IonSkeletonText, useIonViewWillEnter, IonModal, IonTitle, IonButtons } from '@ionic/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { IonChip, IonContent, IonHeader, IonLabel, IonLoading, IonPage, IonSearchbar, IonSegment, IonSegmentButton, IonText, IonToolbar, IonButton, IonProgressBar, IonBadge, IonRefresher, IonRefresherContent, IonSkeletonText, useIonViewWillEnter, IonModal, IonTitle, IonButtons, IonIcon } from '@ionic/react';
+import React, { use, useCallback, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBus, faCarSide, faClipboardList, faQrcode, faUser, faArrowsRotate, faBusSide, faCoins, faCircleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faBus, faCarSide, faClipboardList, faQrcode, faUser, faArrowsRotate, faBusSide, faCoins, faCircleExclamation, faPrint } from '@fortawesome/free-solid-svg-icons'
 import { faClock } from '@fortawesome/free-regular-svg-icons'
 import { useHistory } from 'react-router-dom';
 
@@ -17,6 +17,8 @@ import StatsSkeleton from '../components/StatsSkeleton';
 import moment from 'moment-timezone';
 import { t } from 'i18next';
 import { supabase } from '../supabase/client';
+import { alertCircle } from 'ionicons/icons';
+import { useBluetoothPrinter } from '../hooks/useBluetoothPrinter';
 
 // Set default timezone to Bangkok (Asia/Bangkok)
 moment.tz.setDefault('Asia/Bangkok');
@@ -122,14 +124,8 @@ const Home: React.FC = () => {
                   </p>
                 </IonText>
               </div>
-              <div className="avatar-mini" onClick={() => history.push('/profile')}>
-                {driverMe?.user.avatar_url ? (
-                  <img src={driverMe.user.avatar_url} alt="avatar" />
-                ) : (
-                  <div className="avatar-placeholder ">
-                    {driverMe?.user.full_name.charAt(0) || 'U'}
-                  </div>
-                )}
+              <div className=" set-center" onClick={() => history.push('/settings')}>
+                <PrinterSetting />
               </div>
             </div>
             <br />
@@ -324,3 +320,31 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
+const PrinterSetting =()=>{
+  const [isAddPrinter ,setIsAddPrinter] = useState(false);
+  const {  requestPermission } = useBluetoothPrinter();
+
+  useEffect(()=>{
+    const checkprintersave=async()=>{ 
+      const granted = await requestPermission();
+      if(!granted){
+        setIsAddPrinter(false)
+      }
+      const printerstr = localStorage.getItem('selected_printer_device');
+      if (printerstr) {
+        const printer = JSON.parse(printerstr);
+        console.log("printer", printer)
+        setIsAddPrinter(true)
+      }
+    }
+    checkprintersave()
+  },[])
+  return (
+    <div  style={{position:"relative",width:"2rem" , height:"2rem"}} >
+      <FontAwesomeIcon icon={faPrint} />
+      {!isAddPrinter &&( <IonIcon icon={alertCircle}  color="danger" style={{position:"absolute",right: 0 , top:" -.5rem",zIndex:999}} /> )}
+    </div>
+  )
+}
+ 
