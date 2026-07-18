@@ -315,10 +315,10 @@ const ReceiptModal = ({ receiptData, open, setOpen, company }: ReceiptProps & { 
             </IonContent>
             <IonFooter style={{ padding: "10px" , display: "flex", flexDirection: "row", gap: "10px" }}>
                 <IonButton expand="block" color="primary" onClick={() => setOpen(false)}>
-                    ปิด / Close
+                    ปิด 
                 </IonButton>
                 <IonButton expand="block" color="secondary" onClick={() => fetchReceiptData()}>
-                    พิมพ์ใบเสร็จ / Print Receipt
+                    พิมพ์ใบเสร็จ  
                 </IonButton>
             </IonFooter>
 

@@ -114,7 +114,7 @@ const Trips: React.FC = () => {
           <br />
 
           <IonSegment mode="md" value={segment} onIonChange={(e) => setSegment(e.detail.value as any)} className="mb-4">
-            <IonSegmentButton value="active">
+            <IonSegmentButton value="scheduled">
               <IonLabel color={"dark"} >เที่ยวปัจจุบัน</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="ended">

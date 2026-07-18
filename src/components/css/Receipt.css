@@ -1,38 +1,48 @@
 #receipt-content{
-     width: 384px;
+    width: 384px;
+    color: black;
+    background: #FFF;
 }
 #receipt-content small {
     font-size: .8em !important;
+     color: black;
 }
 #receipt-content ion-label ,
 #receipt-content ion-text {
     font-size: .9em !important;
+     color: black;
 }
  
 h2 {
     font-size: 1.2em !important;
+     color: black;
     font-weight: 600;
 }
 h3 {
     font-size: 1em !important;
     font-weight: 600;
+     color: black;
 }
 .booking-ref-num {
     font-size: .7em !important;
     font-weight: 600;
+     color: black;
 }
 .booking-ref-date {
     font-size: .7em !important; 
+     color: black;
 }
 .qr-img{
     width: 60vw;
 }
 ion-label.bold {
     font-weight: 500; 
+     color: black;
 }
 .trip-detail ion-col{ 
     padding: 0.1em 0;
     font-size: .9em !important; 
+     color: black;
 }
 .conditions {
     margin-top: 1em;

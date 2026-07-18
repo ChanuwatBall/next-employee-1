@@ -24,12 +24,15 @@ import {
 import {
   bluetoothOutline,
   checkmarkCircleOutline,
+  chevronBackOutline,
   chevronForwardOutline,
   closeCircleOutline,
   printOutline,
   refreshOutline,
 } from 'ionicons/icons';
 import { useBluetoothPrinter, BluetoothDevice } from '../hooks/useBluetoothPrinter';
+import "./css/Setting.css"
+import { useHistory } from 'react-router';
 
 const PRINTER_STORAGE_KEY = 'selected_printer_device';
 
@@ -44,6 +47,7 @@ const Settings: React.FC = () => {
   const [showPrinterModal, setShowPrinterModal] = useState(false);
   const [connectingAddress, setConnectingAddress] = useState<string | null>(null);
   const [savedPrinter, setSavedPrinter] = useState<SavedPrinter | null>(null);
+  const history = useHistory();
 
   useEffect(() => {
     const stored = localStorage.getItem(PRINTER_STORAGE_KEY);
@@ -109,18 +113,18 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage> 
+      <IonContent fullscreen className="ion-padding">
       <IonHeader mode="md" className="ion-no-border">
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton color="dark" defaultHref="/profile" />
-          </IonButtons>
-          <IonTitle>Setting</IonTitle>
+         <IonToolbar color={"transparent"} style={{  display:"flex" , flexDirection:"row" ,  justifyContent:"flex-start" , }}>
+             <IonButton color="dark" fill='clear' onClick={() => history.goBack()} style={{marginLeft: -10}}>
+              <IonIcon icon={chevronBackOutline} />
+              <IonLabel>Setting</IonLabel>
+             </IonButton>  
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="ion-padding">
-        <IonCard  >
+        <IonCard mode="ios" className='printer-card ion-no-margin ion-margin-vertical'   >
           <IonCardHeader>
             <IonCardSubtitle>Printer</IonCardSubtitle>
             <IonCardTitle  style={{ fontSize: '1em' }} >ตั้งค่าเครื่องพิมพ์</IonCardTitle>
@@ -142,47 +146,43 @@ const Settings: React.FC = () => {
           </IonCardContent>
         </IonCard>
 
-        <IonModal isOpen={showPrinterModal} onDidDismiss={() => setShowPrinterModal(false)} initialBreakpoint={0.9} breakpoints={[0, 0.9]}>
-          <IonHeader>
+        <IonModal mode='ios' isOpen={showPrinterModal} onDidDismiss={() => setShowPrinterModal(false)} initialBreakpoint={0.9} breakpoints={[0, 0.9]}>
+          <IonHeader mode='md' className='ion-no-border' >
             <IonToolbar>
-              <IonButtons slot="start">
-                <IonButton onClick={() => setShowPrinterModal(false)}>ปิด</IonButton>
-              </IonButtons>
               <IonTitle>Bluetooth Printer</IonTitle>
+               
               <IonButtons slot="end">
-                <IonButton onClick={scan} disabled={scanning}  style={{fontSize: '.8em'}}>
-                  <IonIcon slot="start" icon={refreshOutline} />
-                  <IonLabel >สแกนใหม่</IonLabel>
-                </IonButton>
+                <IonButton onClick={() => setShowPrinterModal(false)}>ปิด</IonButton>
               </IonButtons>
             </IonToolbar>
           </IonHeader>
 
           <IonContent className="ion-padding">
-            <IonButton expand="block" onClick={scan} disabled={scanning}>
-              {scanning ? <IonSpinner name="crescent" slot="start" /> : <IonIcon icon={bluetoothOutline} slot="start" />}
-              {scanning ? 'กำลังสแกน Bluetooth...' : 'สแกนอุปกรณ์ Bluetooth'}
-            </IonButton>
+            
 
-            {savedPrinter && (
-              <IonCard style={{ marginTop: 16 }}>
+             
+              <div style={{width:"100%", display:"flex",flexDirection:"row",justifyContent:"space-between"}} >
+                <IonLabel>อุปกรณ์ที่จับคู่</IonLabel>
+                <IonButton fill='clear' size="small" onClick={scan} disabled={scanning}>
+                  {scanning ? <IonSpinner name="crescent" slot="start" /> : <IonIcon icon={bluetoothOutline} slot="start" />}
+                  {scanning ? ' Scanning..' : 'Scan'}
+                </IonButton>
+              </div>
+              <IonCard className='ion-no-margin' mode="ios" style={{ marginTop: 16 }}>
                 <IonCardContent>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ flex: 1 }}>
-                      <IonText color="success">
+                   {savedPrinter ? (<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ flex: 1 }} onClick={disconnectPrinter}>
+                      <IonText color="dark">
                         <p style={{ margin: 0 }}>
                           เครื่องที่บันทึกไว้: {savedPrinter.name} ({savedPrinter.address})
                         </p>
                       </IonText>
-                    </div>
-                    <IonButton size="small" color="danger" onClick={disconnectPrinter}>
-                      <IonIcon slot="start" icon={closeCircleOutline} />
-                      ยกเลิก
-                    </IonButton>
-                  </div>
+                    </div> 
+                  </div> ):
+                   <IonText style={{fontSize: '.9em'}} > ไม่พบอุปกรณ์ที่บันทึกไว้ </IonText>  
+                  }
                 </IonCardContent>
               </IonCard>
-            )}
 
             <IonList style={{ marginTop: 16 }}>
               {sortedDevices.length === 0 && !scanning && (
@@ -194,6 +194,13 @@ const Settings: React.FC = () => {
                 </IonItem>
               )}
 
+             <div style={{width:"100%", display:"flex",flexDirection:"row",justifyContent:"space-between"}} >
+                <IonLabel>อุปกรณ์ที่พบ</IonLabel>
+                <IonButton fill='clear' size="small" onClick={scan} disabled={scanning}>
+                  {scanning ? <IonSpinner name="crescent" slot="start" /> : <IonIcon icon={bluetoothOutline} slot="start" />}
+                  {scanning ? ' Scanning..' : 'Scan'}
+                </IonButton>
+              </div>
               {sortedDevices.map((device) => {
                 const label = device.name?.trim() || device.address;
                 const subtitle = device.address === device.id ? device.address : `${device.address}`;

@@ -1,0 +1,5 @@
+.printer-card{
+    --border-radius: 30px;
+    box-shadow: none;
+    border: 1px solid var(--ion-color-light-tint);
+}
