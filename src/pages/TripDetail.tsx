@@ -370,7 +370,7 @@ const TripDetail: React.FC = () => {
                 <IonButton expand='block' mode='ios' color="success" className="rounded-xl" onClick={() => setShowStartModal(true)} disabled={!isToday}>
                   เริ่มเที่ยว
                 </IonButton>
-                <IonButton expand='block' mode='ios' color="danger" className="rounded-xl" onClick={() => endTask()} disabled={!isToday}>
+                <IonButton expand='block' mode='ios' color="danger" className="rounded-xl" onClick={() => endTask()} >
                   จบเที่ยว
                 </IonButton><br />
                 <IonButton expand='block' fill='outline' mode='ios' color="danger" className="rounded-xl"

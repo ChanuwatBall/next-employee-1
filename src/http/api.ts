@@ -119,16 +119,16 @@ export interface AppPreferencesResponse {
 }
 
 export interface DriverSellTicketResponse {
-  bookingId: string;
-  bookingReference: string;
-  total: number;
-  addonTotal: number;
-  status: string;
-  cashOnHand: number;
+	bookingId: string;
+	bookingReference: string;
+	total: number;
+	addonTotal: number;
+	status: string;
+	cashOnHand: number;
 }
 
 const getAuthorizationHeader = (token: string) => ({
-  Authorization: `Bearer ${token}`,
+	Authorization: `Bearer ${token}`,
 });
 
 export const driverLogin = async (
@@ -174,17 +174,17 @@ export const driverCheckIn = async <T = any>(
 //   ]
 // }'
 interface DriverSellTicketPayload {
-  tripId: string;
-  passengers: {
-      seatNumber: string;
-      fullName: string;
-      phone: string;
-      tierId: string;
-    }[],
-  addOns: {
-      addOnId: string;
-      qty: number;
-    }[]
+	tripId: string;
+	passengers: {
+		seatNumber: string;
+		fullName: string;
+		phone: string;
+		tierId: string;
+	}[],
+	addOns: {
+		addOnId: string;
+		qty: number;
+	}[]
 }
 export const driverSellTicket = async <T = any>(
 	payload: DriverSellTicketPayload,
@@ -199,47 +199,47 @@ export const getPreferences = async (): Promise<AppPreferencesResponse> => {
 };
 
 export interface BookingDetail {
-  id: string,
-  bookingReference: string,
-  tripId: string,
-  origin: string,
-  destination: string,
-  date: string,
-  departureTime: string,
-  arrivalTime: string,
-  seats: string[],
-  status: string,
-  paymentStatus: string,
-  expiresAt: string,
-  omiseChargeId: string,
-  total: number,
-  boardingPoint: string,
-  dropOffPoint: string,
-  busType: string,
-  tripType: string,
-  busPlate: string,
-  routeName: string,
-  paymentMethod: string,
-  promoCode: string,
-  discount: number,
-  pricePerSeat: number,
-  bookingDate: string,
-  passengers:{
-      fullName: string,
-      thaiId: string,
-      phone: string,
-      seatNumber: string,
-      passengerType: string	
-    }[],
-  addOns: {
-    name: string,
-    nameEn: string,
-      category: string,
-      qty: number,
-      unitPrice: number,
-      lineTotal: number
-    }[],
-  addonTotal: number
+	id: string,
+	bookingReference: string,
+	tripId: string,
+	origin: string,
+	destination: string,
+	date: string,
+	departureTime: string,
+	arrivalTime: string,
+	seats: string[],
+	status: string,
+	paymentStatus: string,
+	expiresAt: string,
+	omiseChargeId: string,
+	total: number,
+	boardingPoint: string,
+	dropOffPoint: string,
+	busType: string,
+	tripType: string,
+	busPlate: string,
+	routeName: string,
+	paymentMethod: string,
+	promoCode: string,
+	discount: number,
+	pricePerSeat: number,
+	bookingDate: string,
+	passengers: {
+		fullName: string,
+		thaiId: string,
+		phone: string,
+		seatNumber: string,
+		passengerType: string
+	}[],
+	addOns: {
+		name: string,
+		nameEn: string,
+		category: string,
+		qty: number,
+		unitPrice: number,
+		lineTotal: number
+	}[],
+	addonTotal: number
 }
 export const getBookingDetail = async <T = any>(id: string, token?: string): Promise<BookingDetail> => {
 	return apiClient.get<BookingDetail>(`/bookings/${id}`, {
@@ -271,7 +271,25 @@ export interface DriverMeResponse {
 	today_earnings: number;
 	today_window_start: string;
 	today_window_end: string;
-	current_shift: unknown | null;
+	current_shift: {
+		id: string
+		driver_id: string
+		trip_id: string
+		vehicle_id: null
+		started_at:string
+		stopped_at: string|  null
+		start_km: number
+		stop_km: number | null
+		start_mileage: number
+		stop_mileage: null
+		start_battery:number
+		stop_battery: number | null
+		is_alert: false,
+		alert_message: any | null
+		notes: string 
+		created_at: string
+		updated_at: string
+	}
 	alerts: unknown[];
 }
 
@@ -324,7 +342,7 @@ export interface Province {
 }
 
 
-export const getRouteTierPrices = async (routeId: string ) => {
+export const getRouteTierPrices = async (routeId: string) => {
 	return apiClient.get(`/admin/routes/${routeId}/tier-prices`, {
 		headers: getAuthHeaders(),
 	});
@@ -505,15 +523,15 @@ export interface CreateBookingPayload {
 	omiseChargeId: string;
 }
 export interface CreateBookingResponse {
-  bookingId: string,
-  bookingReference: string,
-  status: string,
-  expiresAt: string,
-  total: number,
-  addonTotal: number,
-  stampRedeemed: boolean,
-  stampDiscount: number,
-  stampsLeft: number
+	bookingId: string,
+	bookingReference: string,
+	status: string,
+	expiresAt: string,
+	total: number,
+	addonTotal: number,
+	stampRedeemed: boolean,
+	stampDiscount: number,
+	stampsLeft: number
 }
 
 export const createBooking = async (payload: CreateBookingPayload): Promise<CreateBookingResponse> => {

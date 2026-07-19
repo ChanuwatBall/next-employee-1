@@ -201,7 +201,7 @@ const Home: React.FC = () => {
                     <h3 className="active-shift-title">เที่ยวปัจจุบันของคุณ</h3>
                     <p className="active-shift-timestamp">เริ่มเมื่อ {moment((driverMe.current_shift as any).started_at).format('HH:mm')} น.</p>
                   </div>
-                  <IonButton size="small" mode="ios" fill="outline" color="success" onClick={() => history.push('/trips')}>
+                  <IonButton size="small" mode="ios" fill="outline" color="success" onClick={() => history.push('/trip/'+driverMe?.current_shift?.trip_id)}>
                     ดูรายละเอียด
                   </IonButton>
                 </div>
