@@ -58,8 +58,8 @@ const Home: React.FC = () => {
       const token = session?.access_token;
 
       if (!token) return;
-      const { data: bks } = await supabase.from("bookings").select("*");
-      console.log("bks", bks);
+      // const { data: bks } = await supabase.from("bookings").select("*");
+      // console.log("bks", bks);
 
       const [tripsData, meData, roundsData] = await Promise.all([
         getDriverTrips(date.format('YYYY-MM-DD'), token),
@@ -82,7 +82,7 @@ const Home: React.FC = () => {
       setTotalStats({
         alerts: roundsData?.data.filter((round: any) => round.alert_message != null),
         total_earnings: roundsData?.earnings_total || 0,
-        earning_per_round: roundsData?.earning_per_round || meData.driver.earning_per_round || 0
+        earning_per_round: roundsData?.earning_per_round || meData?.driver?.earning_per_round || 0
       });
     } catch (e) {
       console.error(e);

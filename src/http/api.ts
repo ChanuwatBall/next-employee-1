@@ -1,6 +1,6 @@
 import { CapacitorHttp, HttpHeaders, HttpParams } from '@capacitor/core';
 
-export const API = 'https://nova-api.rubyclaw.tech/api';
+export const API = 'http://localhost:3001/api';
 
 const DEFAULT_HEADERS: HttpHeaders = {
 	'Content-Type': 'application/json',
