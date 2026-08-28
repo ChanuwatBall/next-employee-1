@@ -31,6 +31,7 @@ import {
     driverSellTicket,
     DriverSellTicketResponse,
     getBookingDetail,
+    getDriverBookingDetail,
     getPaymentTransaction,
     getTripDetail,
     getTripSeats,
@@ -417,7 +418,7 @@ const SellTicket: React.FC = () => {
             }
 
             setSaleBookingId(result.bookingId);
-            const detail = await getBookingDetail(result.bookingId, session?.access_token);
+            const detail = await getDriverBookingDetail(result.bookingId, session?.access_token);
             await setSuccessFromBookingDetail(detail, "cash", result.bookingReference);
             iontoast({ message: "ชำระเงินสดสำเร็จ", duration: 2000, color: "success", position: "top" });
             downloadCurrentReceipt()

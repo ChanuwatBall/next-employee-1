@@ -249,7 +249,10 @@ const PlanChair: React.FC = () => {
     };
 
     const fetchTierPrices =async()=>{
-       const prices = await getRouteTierPrices(id)
+       const tripData: any = await getTripDetail(id);
+       const routeId = tripData?.route_id?.id || tripData?.routeId;
+       if (!routeId) return;
+       const prices = await getRouteTierPrices(routeId, id)
        console.log("tier prices: ", prices)
     }
 

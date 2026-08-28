@@ -1,6 +1,11 @@
 import { CapacitorHttp, HttpHeaders, HttpParams } from '@capacitor/core';
 
-export const API = 'http://localhost:3001/api';
+export const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+// nova-express-1 exposes a compatibility surface for the driver flows at
+// /api/driver/*. Payment QR and its booking flow intentionally remain on the
+// legacy API until their progress/polling UI is migrated together.
+export const DRIVER_API = import.meta.env.VITE_DRIVER_API_URL || 'http://localhost:3001/api';
 
 const DEFAULT_HEADERS: HttpHeaders = {
 	'Content-Type': 'application/json',
@@ -38,7 +43,12 @@ const toHttpParams = (params: Record<string, unknown>): HttpParams => {
 	return normalized;
 };
 
-const toAbsoluteUrl = (path: string) => (path.startsWith('http') ? path : `${API}${path}`);
+const usesDriverCompatibilityApi = (path: string) => path.startsWith('/driver/');
+
+const toAbsoluteUrl = (path: string) => {
+	if (path.startsWith('http')) return path;
+	return `${usesDriverCompatibilityApi(path) ? DRIVER_API : API}${path}`;
+};
 
 const requestData = async <T = any>(
 	method: string,
@@ -195,7 +205,7 @@ export const driverSellTicket = async <T = any>(
 	});
 }
 export const getPreferences = async (): Promise<AppPreferencesResponse> => {
-	return apiClient.get<AppPreferencesResponse>('/preferences');
+	return apiClient.get<AppPreferencesResponse>('/driver/preferences');
 };
 
 export interface BookingDetail {
@@ -247,16 +257,27 @@ export const getBookingDetail = async <T = any>(id: string, token?: string): Pro
 	});
 };
 
+// Cash sales now originate from the driver compatibility API, while QR sales
+// still use getBookingDetail above until their payment flow is migrated.
+export const getDriverBookingDetail = async (id: string, token?: string): Promise<BookingDetail> => {
+	return apiClient.get<BookingDetail>(`/driver/bookings/${id}`, {
+		headers: token ? getAuthorizationHeader(token) : getAuthHeaders(),
+	});
+};
+
 export interface DriverMeResponse {
 	driver: {
 		id: string;
 		name: string;
 		license_number: string;
+		license_expiry?: string | null;
 		phone: string;
 		is_active: boolean;
 		earning_per_round: number;
 		notes: string | null;
 		updated_at: string;
+		insurance_phone?: string | null;
+		insurance_company?: string | null;
 	};
 	user: {
 		id: string;
@@ -316,7 +337,9 @@ export const updateDriverMe = async (
 };
 
 export const logoutApi = async (refreshToken?: string): Promise<void> => {
-	await apiClient.post('/auth/logout', refreshToken ? { refresh_token: refreshToken } : {});
+	await apiClient.post('/driver/logout', refreshToken ? { refresh_token: refreshToken } : {}, {
+		headers: getAuthHeaders(),
+	});
 };
 
 export interface ShiftStartPayload {
@@ -342,8 +365,9 @@ export interface Province {
 }
 
 
-export const getRouteTierPrices = async (routeId: string) => {
-	return apiClient.get(`/admin/routes/${routeId}/tier-prices`, {
+export const getRouteTierPrices = async (routeId: string, tripId?: string) => {
+	return apiClient.get(`/driver/routes/${routeId}/tier-prices`, {
+		params: tripId ? { tripId } : undefined,
 		headers: getAuthHeaders(),
 	});
 }
@@ -410,18 +434,20 @@ export const getDriverTripPassengers = async (tripId: string) => {
 	}
 };
 
-export const getTripSeats = async (tripId: string) => apiClient.get(`/trips/${tripId}/seats`);
+export const getTripSeats = async (tripId: string) =>
+	apiClient.get(`/driver/trips/${tripId}/seats`, { headers: getAuthHeaders() });
 
 export const getProvinces = async (routeId?: string): Promise<Province[]> => {
-	const response = await apiClient.get<Province[]>('/provinces', {
+	const response = await apiClient.get<Province[]>('/driver/provinces', {
 		params: routeId ? { routeId } : undefined,
+		headers: getAuthHeaders(),
 	});
 	return response || [];
 };
 
 export const getTripDetail = async (id: string) => {
 	const [tripResponse, provinces] = await Promise.all([
-		apiClient.get(`/trips/${id}`),
+		apiClient.get(`/driver/trips/${id}`, { headers: getAuthHeaders() }),
 		getProvinces().catch((err) => {
 			console.warn('Unable to load provinces', err);
 			return [];
@@ -441,8 +467,9 @@ export const getBusStops = async (
 	},
 ) => {
 	try {
-		const res = await apiClient.get<any[]>(`/bus-stops`, {
+		const res = await apiClient.get<any[]>(`/driver/bus-stops`, {
 			params: { routeId },
+			headers: getAuthHeaders(),
 		});
 
 		return (res || []).map((stop: any) => ({
@@ -483,13 +510,13 @@ export interface TripPassengerLocationsResponse {
 export const getTripPassengerLocations = async (
 	tripId: string,
 ): Promise<TripPassengerLocationsResponse> => {
-	return apiClient.get<TripPassengerLocationsResponse>(`/trips/${tripId}/passenger-locations`, {
+	return apiClient.get<TripPassengerLocationsResponse>(`/driver/trips/${tripId}/passenger-locations`, {
 		headers: getAuthHeaders(),
 	});
 };
 
 export const checkInSelf = async (ticketNumber: string, qrCode: string) => {
-	return apiClient.post(`/checkin/self`, { ticketNumber, qrCode }, { headers: getAuthHeaders() });
+	return apiClient.post(`/driver/checkin/self`, { ticketNumber, qrCode }, { headers: getAuthHeaders() });
 };
 
 export interface CreatePaymentQrPayload {
