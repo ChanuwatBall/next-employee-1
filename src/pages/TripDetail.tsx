@@ -19,6 +19,7 @@ import { getBusStops, getDriverTripPassengers, getTripDetail, startShift, stopSh
 interface TripData {
   id: string;
   bus_number: string;
+  name: string
   date: string;
   departure_time: string;
   arrival_time: string;
@@ -273,8 +274,12 @@ const TripDetail: React.FC = () => {
         <div>
           <div className="grid grid-rows-2   ion-padding-horizontal ion-padding-top bg-primary text-white  ion-padding-bottom  "
             style={{ borderBottomLeftRadius: "3rem", borderBottomRightRadius: "3rem", paddingBottom: "4rem" }} >
-
-            <div className='grid grid-cols-12 gap-2 text-light ion-margin-horizontal items-center' >
+              <div className='col-span-5 overflow-hidden'>
+              <IonLabel style={{ fontWeight: "bolder", color: "#FFF", fontSize: "1.8rem", whiteSpace: "nowrap", display: "block" }} >{
+                trip?.name
+              }</IonLabel>
+              </div>
+            {/* <div className='grid grid-cols-12 gap-2 text-light ion-margin-horizontal items-center' >
               <div className='col-span-5 overflow-hidden'>
                 <IonLabel style={{ fontWeight: "bolder", color: "#FFF", fontSize: "1.8rem", whiteSpace: "nowrap", display: "block" }} >{trip.route_id?.origin}</IonLabel>
               </div>
@@ -291,7 +296,7 @@ const TripDetail: React.FC = () => {
             </div>
             <div className='ion-margin-horizontal ion-text-right ' >
               <IonLabel className='text-light' style={{ fontSize: "0.8em", color: "white" }} >{trip.date && moment(trip.date).format('DD MMMM , YYYY')}</IonLabel>
-            </div>
+            </div> */}
           </div>
           <div style={{ width: "100%", marginTop: "-2rem", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
             className='flex flex-column items-center justify-center '

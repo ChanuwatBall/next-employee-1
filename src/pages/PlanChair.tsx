@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getRouteTierPrices, getBookingDetail } from "../http/api";
+import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getBookingDetail } from "../http/api";
 import { useParams, useHistory } from "react-router-dom";
 import {
     IonPage,
@@ -190,9 +190,9 @@ const PlanChair: React.FC = () => {
     const fetchTripAndSeats = async () => {
         setIsLoading(true);
         try {
-            const companyState = JSON.parse(localStorage.getItem('company') || 'null');
-            console.log("company from state: ", companyState);
-           if (companyState) setCompany(companyState);
+        //     const companyState = JSON.parse(localStorage.getItem('company') || 'null');
+        //     console.log("company from state: ", companyState);
+        //    if (companyState) setCompany(companyState);
 
             const passengers: any[] = await getDriverTripPassengers(id);
             console.log("passengers ", passengers);
@@ -200,7 +200,8 @@ const PlanChair: React.FC = () => {
             // Fetch Trip
             const tripData = await getTripDetail(id);
             if (tripData) setTrip(tripData as any);
-
+            const seats = await getTripSeats(id)
+            console.log("seats ",seats)
             // Fetch Layout and Seats from Nex API
             const apiData = await getTripSeats(id);
             if (apiData) {
@@ -252,8 +253,8 @@ const PlanChair: React.FC = () => {
        const tripData: any = await getTripDetail(id);
        const routeId = tripData?.route_id?.id || tripData?.routeId;
        if (!routeId) return;
-       const prices = await getRouteTierPrices(routeId, id)
-       console.log("tier prices: ", prices)
+    //    const prices = await getRouteTierPrices(routeId, id)
+    //    console.log("tier prices: ", prices)
     }
 
     const handlePullToRefresh = async (event: any) => {

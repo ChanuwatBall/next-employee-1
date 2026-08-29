@@ -134,16 +134,16 @@ const Trips: React.FC = () => {
             trips.map((trip, index) => (
               <BouceAnimation duration={(index + 2) / 10} className="card-executive" key={trip.tripId}>
                 <CardTrip
-                  busNumber={trip.busNumber}
-                  title={`${trip.origin} - ${trip.destination}`}
-                  time={trip.departureTime}
-                  arrive={trip.arrivalTime}
+                  title={`${trip.route}`}
+                  time={moment(trip.departureTime).format("HH:MM")}
+                  arrive={moment(trip.arrivalTime).format("HH:MM")}
                   tripdate={trip.date}
                   passengerOnboard={trip.checkedIn}
                   totalPassenger={trip.totalSeats}
-                  isOnBoard={moment(`${trip.date} ${trip?.departureTime}`).isBefore(moment()) && moment(`${trip.date} ${trip?.arrivalTime}`).isAfter(moment())}
-                  isEnded={moment(`${trip.date} ${trip?.arrivalTime}`).isBefore(moment())}
-                  select={() => {history.push(`/trip/${trip.tripId}`); localStorage.setItem('company', JSON.stringify(trip?.company));}}
+                  isOnBoard={moment(`${trip?.departureTime}`).isBefore(moment()) && moment(`${trip?.arrivalTime}`).isAfter(moment())}
+                  isEnded={moment(`${trip?.arrivalTime}`).isBefore(moment())}
+                  select={() => {history.push(`/trip/${trip.tripId}` ) ; localStorage.setItem('company', JSON.stringify(trip?.company));}}
+                  busNumber={trip.busNumber}
                 />
               </BouceAnimation>
             ))

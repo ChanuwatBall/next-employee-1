@@ -1,166 +1,184 @@
-import { CapacitorHttp, HttpHeaders, HttpParams } from '@capacitor/core';
+import { CapacitorHttp, HttpHeaders, HttpParams } from "@capacitor/core";
 
-export const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+export const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
-// nova-express-1 exposes a compatibility surface for the driver flows at
-// /api/driver/*. Payment QR and its booking flow intentionally remain on the
-// legacy API until their progress/polling UI is migrated together.
-export const DRIVER_API = import.meta.env.VITE_DRIVER_API_URL || 'http://localhost:3001/api';
+// nova-express-1 exposes the complete driver sales flow at /api/driver/*.
+// QR payments follow the same booking-first flow as customer payments.
+export const DRIVER_API =
+  import.meta.env.VITE_DRIVER_API_URL || "http://localhost:3001/api";
 
 const DEFAULT_HEADERS: HttpHeaders = {
-	'Content-Type': 'application/json',
+  "Content-Type": "application/json",
 };
 
-const getErrorData = (err: any) => err?.response?.data ?? { error: err?.message ?? 'Network error' };
+const getErrorData = (err: any) =>
+  err?.response?.data ?? { error: err?.message ?? "Network error" };
 
 const getErrorStatus = (err: any) => err?.response?.status ?? err?.status;
 
 const getSession = () => {
-	try {
-		const userStr = localStorage.getItem('session');
-		return userStr ? JSON.parse(userStr) : null;
-	} catch {
-		return null;
-	}
+  try {
+    const userStr = localStorage.getItem("session");
+    return userStr ? JSON.parse(userStr) : null;
+  } catch {
+    return null;
+  }
 };
 
 const getAuthHeaders = (): HttpHeaders => {
-	const session = getSession();
-	if (!session?.access_token) return {};
-	return { Authorization: `Bearer ${session.access_token}` };
+  const session = getSession();
+  if (!session?.access_token) return {};
+  return { Authorization: `Bearer ${session.access_token}` };
 };
 
 const toHttpParams = (params: Record<string, unknown>): HttpParams => {
-	const normalized: HttpParams = {};
-	Object.entries(params).forEach(([key, value]) => {
-		if (value === undefined || value === null) return;
-		if (Array.isArray(value)) {
-			normalized[key] = value.map((item) => String(item));
-			return;
-		}
-		normalized[key] = String(value);
-	});
-	return normalized;
+  const normalized: HttpParams = {};
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value)) {
+      normalized[key] = value.map((item) => String(item));
+      return;
+    }
+    normalized[key] = String(value);
+  });
+  return normalized;
 };
 
-const usesDriverCompatibilityApi = (path: string) => path.startsWith('/driver/');
+const usesDriverCompatibilityApi = (path: string) =>
+  path.startsWith("/driver/");
 
 const toAbsoluteUrl = (path: string) => {
-	if (path.startsWith('http')) return path;
-	return `${usesDriverCompatibilityApi(path) ? DRIVER_API : API}${path}`;
+  if (path.startsWith("http")) return path;
+  return `${usesDriverCompatibilityApi(path) ? DRIVER_API : API}${path}`;
 };
 
 const requestData = async <T = any>(
-	method: string,
-	path: string,
-	options?: {
-		params?: HttpParams;
-		headers?: HttpHeaders;
-		data?: any;
-	},
+  method: string,
+  path: string,
+  options?: {
+    params?: HttpParams;
+    headers?: HttpHeaders;
+    data?: any;
+  },
 ): Promise<T> => {
-	const response = await CapacitorHttp.request({
-		method,
-		url: toAbsoluteUrl(path),
-		params: options?.params,
-		headers: { ...DEFAULT_HEADERS, ...(options?.headers ?? {}) },
-		data: options?.data,
-	});
+  const response = await CapacitorHttp.request({
+    method,
+    url: toAbsoluteUrl(path),
+    params: options?.params,
+    headers: { ...DEFAULT_HEADERS, ...(options?.headers ?? {}) },
+    data: options?.data,
+  });
 
-	return response.data as T;
+  return response.data as T;
 };
 
 export const apiClient = {
-	request: <T = any>(
-		method: string,
-		path: string,
-		options?: { params?: HttpParams; headers?: HttpHeaders; data?: any },
-	) => requestData<T>(method, path, options),
-	get: <T = any>(path: string, options?: { params?: HttpParams; headers?: HttpHeaders }) =>
-		requestData<T>('GET', path, options),
-	post: <T = any>(path: string, data?: any, options?: { params?: HttpParams; headers?: HttpHeaders }) =>
-		requestData<T>('POST', path, { ...options, data }),
-	put: <T = any>(path: string, data?: any, options?: { params?: HttpParams; headers?: HttpHeaders }) =>
-		requestData<T>('PUT', path, { ...options, data }),
-	patch: <T = any>(path: string, data?: any, options?: { params?: HttpParams; headers?: HttpHeaders }) =>
-		requestData<T>('PATCH', path, { ...options, data }),
-	delete: <T = any>(path: string, options?: { params?: HttpParams; headers?: HttpHeaders }) =>
-		requestData<T>('DELETE', path, options),
+  request: <T = any>(
+    method: string,
+    path: string,
+    options?: { params?: HttpParams; headers?: HttpHeaders; data?: any },
+  ) => requestData<T>(method, path, options),
+  get: <T = any>(
+    path: string,
+    options?: { params?: HttpParams; headers?: HttpHeaders },
+  ) => requestData<T>("GET", path, options),
+  post: <T = any>(
+    path: string,
+    data?: any,
+    options?: { params?: HttpParams; headers?: HttpHeaders },
+  ) => requestData<T>("POST", path, { ...options, data }),
+  put: <T = any>(
+    path: string,
+    data?: any,
+    options?: { params?: HttpParams; headers?: HttpHeaders },
+  ) => requestData<T>("PUT", path, { ...options, data }),
+  patch: <T = any>(
+    path: string,
+    data?: any,
+    options?: { params?: HttpParams; headers?: HttpHeaders },
+  ) => requestData<T>("PATCH", path, { ...options, data }),
+  delete: <T = any>(
+    path: string,
+    options?: { params?: HttpParams; headers?: HttpHeaders },
+  ) => requestData<T>("DELETE", path, options),
 };
 
 export interface DriverLoginPayload {
-	username: string;
-	password: string;
+  username: string;
+  password: string;
 }
 
 export interface DriverLoginResponse {
-	token: string;
-	access_token: string;
-	refresh_token: string;
-	user: {
-		id: string;
-		username: string;
-		fullName: string;
-		phone: string;
-		email: string;
-		avatarUrl: string;
-	};
-	driver: {
-		id: string;
-		name: string;
-		phone: string;
-		licenseNumber: string;
-	};
+  token: string;
+  access_token: string;
+  refresh_token: string;
+  user: {
+    id: string;
+    username: string;
+    fullName: string;
+    phone: string;
+    email: string;
+    avatarUrl: string;
+  };
+  driver: {
+    id: string;
+    name: string;
+    phone: string;
+    licenseNumber: string;
+  };
 }
 
 export interface DriverCheckInPayload {
-	ticketNumber: string;
-	qrCode: string;
+  ticketNumber: string;
+  qrCode: string;
 }
 
 export interface AppPreferencesResponse {
-	theme: string;
-	colorPrimary: string;
-	colorSecondary: string;
-	mobileappLogoUrl: string;
-	webIconUrl: string;
-	oaTitle: string;
-	oaBackofficeTitle: string;
+  theme: string;
+  colorPrimary: string;
+  colorSecondary: string;
+  mobileappLogoUrl: string;
+  webIconUrl: string;
+  oaTitle: string;
+  oaBackofficeTitle: string;
 }
 
 export interface DriverSellTicketResponse {
-	bookingId: string;
-	bookingReference: string;
-	total: number;
-	addonTotal: number;
-	status: string;
-	cashOnHand: number;
+  bookingId: string;
+  bookingReference: string;
+  total: number;
+  addonTotal: number;
+  status: string;
+  cashOnHand: number;
 }
 
 const getAuthorizationHeader = (token: string) => ({
-	Authorization: `Bearer ${token}`,
+  Authorization: `Bearer ${token}`,
 });
 
 export const driverLogin = async (
-	payload: DriverLoginPayload,
+  payload: DriverLoginPayload,
 ): Promise<DriverLoginResponse> => {
-	return apiClient.post<DriverLoginResponse>('/driver/login', payload);
+  return apiClient.post<DriverLoginResponse>("/driver/login", payload);
 };
 
-export const getDriverTrips = async <T = any>(date: string, token: string): Promise<T> => {
-	return apiClient.get<T>('/driver/trips', {
-		params: { date },
-		headers: getAuthorizationHeader(token),
-	});
+export const getDriverTrips = async <T = any>(
+  date: string,
+  token: string,
+): Promise<T> => {
+  return apiClient.get<T>("/driver/trips", {
+    params: { date },
+    headers: getAuthorizationHeader(token),
+  });
 };
 
 export const driverCheckIn = async <T = any>(
-	payload: DriverCheckInPayload,
-	token: string,
+  payload: DriverCheckInPayload,
+  token: string,
 ): Promise<T> => {
-	return apiClient.post<T>('/driver/checkin', payload, {
-		headers: getAuthorizationHeader(token),
-	});
+  return apiClient.post<T>("/driver/checkin", payload, {
+    headers: getAuthorizationHeader(token),
+  });
 };
 // curl /api/driver/sell \
 //   --request POST \
@@ -184,477 +202,531 @@ export const driverCheckIn = async <T = any>(
 //   ]
 // }'
 interface DriverSellTicketPayload {
-	tripId: string;
-	passengers: {
-		seatNumber: string;
-		fullName: string;
-		phone: string;
-		tierId: string;
-	}[],
-	addOns: {
-		addOnId: string;
-		qty: number;
-	}[]
+  tripId: string;
+  passengers: {
+    seatNumber: string;
+    fullName: string;
+    phone: string;
+    tierId: string;
+  }[];
+  addOns: {
+    addOnId: string;
+    qty: number;
+  }[];
 }
 export const driverSellTicket = async <T = any>(
-	payload: DriverSellTicketPayload,
-	token: string,
+  payload: DriverSellTicketPayload,
+  token: string,
 ): Promise<DriverSellTicketResponse> => {
-	return apiClient.post<DriverSellTicketResponse>('/driver/sell', payload, {
-		headers: getAuthorizationHeader(token),
-	});
-}
+  return apiClient.post<DriverSellTicketResponse>("/driver/sell", payload, {
+    headers: getAuthorizationHeader(token),
+  });
+};
 export const getPreferences = async (): Promise<AppPreferencesResponse> => {
-	return apiClient.get<AppPreferencesResponse>('/driver/preferences');
+  return apiClient.get<AppPreferencesResponse>("/driver/preferences");
 };
 
 export interface BookingDetail {
-	id: string,
-	bookingReference: string,
-	tripId: string,
-	origin: string,
-	destination: string,
-	date: string,
-	departureTime: string,
-	arrivalTime: string,
-	seats: string[],
-	status: string,
-	paymentStatus: string,
-	expiresAt: string,
-	omiseChargeId: string,
-	total: number,
-	boardingPoint: string,
-	dropOffPoint: string,
-	busType: string,
-	tripType: string,
-	busPlate: string,
-	routeName: string,
-	paymentMethod: string,
-	promoCode: string,
-	discount: number,
-	pricePerSeat: number,
-	bookingDate: string,
-	passengers: {
-		fullName: string,
-		thaiId: string,
-		phone: string,
-		seatNumber: string,
-		passengerType: string
-	}[],
-	addOns: {
-		name: string,
-		nameEn: string,
-		category: string,
-		qty: number,
-		unitPrice: number,
-		lineTotal: number
-	}[],
-	addonTotal: number
+  id: string;
+  bookingReference: string;
+  tripId: string;
+  origin: string;
+  destination: string;
+  date: string;
+  departureTime: string;
+  arrivalTime: string;
+  seats: string[];
+  status: string;
+  paymentStatus: string;
+  expiresAt: string;
+  omiseChargeId: string;
+  total: number;
+  boardingPoint: string;
+  dropOffPoint: string;
+  busType: string;
+  tripType: string;
+  busPlate: string;
+  routeName: string;
+  paymentMethod: string;
+  promoCode: string;
+  discount: number;
+  pricePerSeat: number;
+  bookingDate: string;
+  passengers: {
+    fullName: string;
+    thaiId: string;
+    phone: string;
+    seatNumber: string;
+    passengerType: string;
+  }[];
+  addOns: {
+    name: string;
+    nameEn: string;
+    category: string;
+    qty: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
+  addonTotal: number;
 }
-export const getBookingDetail = async <T = any>(id: string, token?: string): Promise<BookingDetail> => {
-	return apiClient.get<BookingDetail>(`/bookings/${id}`, {
-		headers: token ? getAuthorizationHeader(token) : getAuthHeaders(),
-	});
+export const getBookingDetail = async <T = any>(
+  id: string,
+  token?: string,
+): Promise<BookingDetail> => {
+  return apiClient.get<BookingDetail>(`/bookings/${id}`, {
+    headers: token ? getAuthorizationHeader(token) : getAuthHeaders(),
+  });
 };
 
-// Cash sales now originate from the driver compatibility API, while QR sales
-// still use getBookingDetail above until their payment flow is migrated.
-export const getDriverBookingDetail = async (id: string, token?: string): Promise<BookingDetail> => {
-	return apiClient.get<BookingDetail>(`/driver/bookings/${id}`, {
-		headers: token ? getAuthorizationHeader(token) : getAuthHeaders(),
-	});
+// Driver cash and QR sales use the driver compatibility API. The generic
+// booking detail function above remains for non-driver consumers.
+export const getDriverBookingDetail = async (
+  id: string,
+  token?: string,
+): Promise<BookingDetail> => {
+  return apiClient.get<BookingDetail>(`/driver/bookings/${id}`, {
+    headers: token ? getAuthorizationHeader(token) : getAuthHeaders(),
+  });
 };
 
 export interface DriverMeResponse {
-	driver: {
-		id: string;
-		name: string;
-		license_number: string;
-		license_expiry?: string | null;
-		phone: string;
-		is_active: boolean;
-		earning_per_round: number;
-		notes: string | null;
-		updated_at: string;
-		insurance_phone?: string | null;
-		insurance_company?: string | null;
-	};
-	user: {
-		id: string;
-		username: string;
-		email: string | null;
-		national_id: string | null;
-		full_name: string;
-		phone: string;
-		avatar_url: string | null;
-	};
-	today_rounds_count: number;
-	today_earnings: number;
-	today_window_start: string;
-	today_window_end: string;
-	current_shift: {
-		id: string
-		driver_id: string
-		trip_id: string
-		vehicle_id: null
-		started_at:string
-		stopped_at: string|  null
-		start_km: number
-		stop_km: number | null
-		start_mileage: number
-		stop_mileage: null
-		start_battery:number
-		stop_battery: number | null
-		is_alert: false,
-		alert_message: any | null
-		notes: string 
-		created_at: string
-		updated_at: string
-	}
-	alerts: unknown[];
+  driver: {
+    id: string;
+    name: string;
+    license_number: string;
+    license_expiry?: string | null;
+    phone: string;
+    is_active: boolean;
+    earning_per_round: number;
+    notes: string | null;
+    updated_at: string;
+    insurance_phone?: string | null;
+    insurance_company?: string | null;
+  };
+  user: {
+    id: string;
+    username: string;
+    email: string | null;
+    national_id: string | null;
+    full_name: string;
+    phone: string;
+    avatar_url: string | null;
+  };
+  today_rounds_count: number;
+  today_earnings: number;
+  today_window_start: string;
+  today_window_end: string;
+  current_shift: {
+    id: string;
+    driver_id: string;
+    trip_id: string;
+    vehicle_id: null;
+    started_at: string;
+    stopped_at: string | null;
+    start_km: number;
+    stop_km: number | null;
+    start_mileage: number;
+    stop_mileage: null;
+    start_battery: number;
+    stop_battery: number | null;
+    is_alert: false;
+    alert_message: any | null;
+    notes: string;
+    created_at: string;
+    updated_at: string;
+  };
+  alerts: unknown[];
 }
 
 export const getDriverMe = async (token: string): Promise<DriverMeResponse> => {
-	return apiClient.get<DriverMeResponse>('/driver/me', {
-		headers: getAuthorizationHeader(token),
-	});
+  return apiClient.get<DriverMeResponse>("/driver/me", {
+    headers: getAuthorizationHeader(token),
+  });
 };
 
 export interface UpdateDriverMePayload {
-	name?: string;
-	phone?: string;
-	current_password?: string;
-	new_password?: string;
+  name?: string;
+  phone?: string;
+  current_password?: string;
+  new_password?: string;
 }
 
 export const updateDriverMe = async (
-	payload: UpdateDriverMePayload,
-	token: string,
+  payload: UpdateDriverMePayload,
+  token: string,
 ): Promise<DriverMeResponse> => {
-	return apiClient.patch<DriverMeResponse>('/driver/me', payload, {
-		headers: getAuthorizationHeader(token),
-	});
+  return apiClient.patch<DriverMeResponse>("/driver/me", payload, {
+    headers: getAuthorizationHeader(token),
+  });
 };
 
 export const logoutApi = async (refreshToken?: string): Promise<void> => {
-	await apiClient.post('/driver/logout', refreshToken ? { refresh_token: refreshToken } : {}, {
-		headers: getAuthHeaders(),
-	});
+  await apiClient.post(
+    "/driver/logout",
+    refreshToken ? { refresh_token: refreshToken } : {},
+    {
+      headers: getAuthHeaders(),
+    },
+  );
 };
 
 export interface ShiftStartPayload {
-	trip_id: string;
-	vehicle_id: string;
-	start_km: number;
-	start_mileage: number;
-	start_battery: number;
+  trip_id: string;
+  vehicle_id: string;
+  start_km: number;
+  start_mileage: number;
+  start_battery: number;
 }
 
 export interface ShiftStopPayload {
-	stop_km: number;
-	stop_mileage: number;
-	stop_battery: number;
-	notes: string;
+  stop_km: number;
+  stop_mileage: number;
+  stop_battery: number;
+  notes: string;
 }
 
 export interface Province {
-	id: string;
-	name: string;
-	nameEn: string | null;
-	routeIds: string[];
+  id: string;
+  name: string;
+  nameEn: string | null;
+  routeIds: string[];
 }
-
 
 export const getRouteTierPrices = async (routeId: string, tripId?: string) => {
-	return apiClient.get(`/driver/routes/${routeId}/tier-prices`, {
-		params: tripId ? { tripId } : undefined,
-		headers: getAuthHeaders(),
-	});
-}
+  return apiClient.get(`/driver/routes/${routeId}/tier-prices`, {
+    params: tripId ? { tripId } : undefined,
+    headers: getAuthHeaders(),
+  });
+};
 
 const getProvinceName = (provinces: Province[], provinceId?: string) => {
-	if (!provinceId) return undefined;
-	return provinces.find((province) => province.id === provinceId)?.name;
+  if (!provinceId) return undefined;
+  return provinces.find((province) => province.id === provinceId)?.name;
 };
 
 const normalizeTripDetail = (trip: any, provinces: Province[] = []) => {
-	if (!trip) return trip;
+  if (!trip) return trip;
 
-	const originProvinceId = trip.origin_province_id || trip.originProvinceId;
-	const destinationProvinceId = trip.destination_province_id || trip.destinationProvinceId;
-	const originName = getProvinceName(provinces, originProvinceId);
-	const destinationName = getProvinceName(provinces, destinationProvinceId);
+  const originProvinceId = trip.origin_province_id || trip.originProvinceId;
+  const destinationProvinceId =
+    trip.destination_province_id || trip.destinationProvinceId;
+  const originName = getProvinceName(provinces, originProvinceId);
+  const destinationName = getProvinceName(provinces, destinationProvinceId);
 
-	const route = trip.route_id || trip.route || {
-		id: trip.routeId,
-		origin: originName || trip.origin || trip.originName || trip.originProvinceName || originProvinceId,
-		destination:
-			destinationName ||
-			trip.destination ||
-			trip.destinationName ||
-			trip.destinationProvinceName ||
-			destinationProvinceId,
-		origin_id: originProvinceId,
-		destination_id: destinationProvinceId,
-		duration: trip.duration || '',
-	};
+  const route = trip.route_id ||
+    trip.route || {
+      id: trip.routeId,
+      origin:
+        originName ||
+        trip.origin ||
+        trip.originName ||
+        trip.originProvinceName ||
+        originProvinceId,
+      destination:
+        destinationName ||
+        trip.destination ||
+        trip.destinationName ||
+        trip.destinationProvinceName ||
+        destinationProvinceId,
+      origin_id: originProvinceId,
+      destination_id: destinationProvinceId,
+      duration: trip.duration || "",
+    };
 
-	route.origin = originName || route.origin;
-	route.destination = destinationName || route.destination;
+  route.origin = originName || route.origin;
+  route.destination = destinationName || route.destination;
 
-	const busType = trip.bus_type || {
-		id: trip.busTypeId || trip.bus_type_id || trip.busType,
-		name: trip.busType || trip.busTypeName || '',
-		amenities: trip.amenities || [],
-	};
+  const busType = trip.bus_type || {
+    id: trip.busTypeId || trip.bus_type_id || trip.busType,
+    name: trip.busType || trip.busTypeName || "",
+    amenities: trip.amenities || [],
+  };
 
-	return {
-		...trip,
-		route_id: route,
-		bus_type: busType,
-		bus_type_id: trip.bus_type_id || trip.busTypeId || busType.id,
-		departure_time: trip.departure_time || trip.departureTime,
-		arrival_time: trip.arrival_time || trip.arrivalTime,
-		available_seats: trip.available_seats || trip.availableSeats,
-		total_seats: trip.total_seats || trip.totalSeats,
-		trip_type: trip.trip_type || trip.tripType,
-		bus_number: trip.bus_number || trip.busNumber || trip.busPlate || '',
-		origin_province_id: originProvinceId,
-		destination_province_id: destinationProvinceId,
-	};
+  return {
+    ...trip,
+    route_id: route,
+    bus_type: busType,
+    bus_type_id: trip.bus_type_id || trip.busTypeId || busType.id,
+    departure_time: trip.departure_time || trip.departureTime,
+    arrival_time: trip.arrival_time || trip.arrivalTime,
+    available_seats: trip.available_seats || trip.availableSeats,
+    total_seats: trip.total_seats || trip.totalSeats,
+    trip_type: trip.trip_type || trip.tripType,
+    bus_number: trip.bus_number || trip.busNumber || trip.busPlate || "",
+    origin_province_id: originProvinceId,
+    destination_province_id: destinationProvinceId,
+  };
 };
 
 export const getDriverTripPassengers = async (tripId: string) => {
-	try {
-		return await apiClient.get(`/driver/trips/${tripId}/passengers`, {
-			headers: getAuthHeaders(),
-		});
-	} catch (err) {
-		return getErrorData(err);
-	}
+  try {
+    return await apiClient.get(`/driver/trips/${tripId}/passengers`, {
+      headers: getAuthHeaders(),
+    });
+  } catch (err) {
+    return getErrorData(err);
+  }
 };
 
 export const getTripSeats = async (tripId: string) =>
-	apiClient.get(`/driver/trips/${tripId}/seats`, { headers: getAuthHeaders() });
+  apiClient
+    .get(`/driver/trips/${tripId}/seats`, { headers: getAuthHeaders() })
+    .then((res) => {
+      console.log("/seats res ", res.data);
+      return res.data;
+    })
+    .catch((err) => {
+      console.log("/seats err ", err);
+    });
 
 export const getProvinces = async (routeId?: string): Promise<Province[]> => {
-	const response = await apiClient.get<Province[]>('/driver/provinces', {
-		params: routeId ? { routeId } : undefined,
-		headers: getAuthHeaders(),
-	});
-	return response || [];
+  const response = await apiClient.get<Province[]>("/driver/provinces", {
+    params: routeId ? { routeId } : undefined,
+    headers: getAuthHeaders(),
+  });
+  return response || [];
 };
 
 export const getTripDetail = async (id: string) => {
-	const [tripResponse, provinces] = await Promise.all([
-		apiClient.get(`/driver/trips/${id}`, { headers: getAuthHeaders() }),
-		getProvinces().catch((err) => {
-			console.warn('Unable to load provinces', err);
-			return [];
-		}),
-	]);
+  const [tripResponse, provinces] = await Promise.all([
+    apiClient.get(`/driver/trips/${id}`, { headers: getAuthHeaders() }),
+    getProvinces().catch((err) => {
+      console.warn("Unable to load provinces", err);
+      return [];
+    }),
+  ]);
 
-	return normalizeTripDetail(tripResponse, provinces);
+  return normalizeTripDetail(tripResponse, provinces);
 };
 
 export const getBusStops = async (
-	routeId: string,
-	routeMeta?: {
-		originProvinceId?: string;
-		destinationProvinceId?: string;
-		origin?: string;
-		destination?: string;
-	},
+  routeId: string,
+  routeMeta?: {
+    originProvinceId?: string;
+    destinationProvinceId?: string;
+    origin?: string;
+    destination?: string;
+  },
 ) => {
-	try {
-		const res = await apiClient.get<any[]>(`/driver/bus-stops`, {
-			params: { routeId },
-			headers: getAuthHeaders(),
-		});
+  try {
+    const res = await apiClient.get<any[]>(`/driver/bus-stops`, {
+      params: { routeId },
+      headers: getAuthHeaders(),
+    });
 
-		return (res || []).map((stop: any) => ({
-			...stop,
-			order: stop.stopOrder,
-			route_id: {
-				id: stop.routeId,
-				origin_id: routeMeta?.originProvinceId,
-				destination_id: routeMeta?.destinationProvinceId,
-				origin: routeMeta?.origin,
-				destination: routeMeta?.destination,
-			},
-		}));
-	} catch (err) {
-		return getErrorData(err);
-	}
+    return (res || []).map((stop: any) => ({
+      ...stop,
+      order: stop.stopOrder,
+      route_id: {
+        id: stop.routeId,
+        origin_id: routeMeta?.originProvinceId,
+        destination_id: routeMeta?.destinationProvinceId,
+        origin: routeMeta?.origin,
+        destination: routeMeta?.destination,
+      },
+    }));
+  } catch (err) {
+    return getErrorData(err);
+  }
 };
 
 export interface TripPassengerLocationItem {
-	booking_id: string;
-	booking_reference: string;
-	passenger_name: string;
-	seats: string[];
-	latitude: number;
-	longitude: number;
-	accuracy_m: number;
-	reported_at: string;
+  booking_id: string;
+  booking_reference: string;
+  passenger_name: string;
+  seats: string[];
+  latitude: number;
+  longitude: number;
+  accuracy_m: number;
+  reported_at: string;
 }
 
 export interface TripPassengerLocationsResponse {
-	trip_id: string;
-	status: string;
-	reason: string;
-	shift_started_at: string;
-	passengers: TripPassengerLocationItem[];
+  trip_id: string;
+  status: string;
+  reason: string;
+  shift_started_at: string;
+  passengers: TripPassengerLocationItem[];
 }
 
 export const getTripPassengerLocations = async (
-	tripId: string,
+  tripId: string,
 ): Promise<TripPassengerLocationsResponse> => {
-	return apiClient.get<TripPassengerLocationsResponse>(`/driver/trips/${tripId}/passenger-locations`, {
-		headers: getAuthHeaders(),
-	});
+  return apiClient.get<TripPassengerLocationsResponse>(
+    `/driver/trips/${tripId}/passenger-locations`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
 };
 
 export const checkInSelf = async (ticketNumber: string, qrCode: string) => {
-	return apiClient.post(`/driver/checkin/self`, { ticketNumber, qrCode }, { headers: getAuthHeaders() });
-};
-
-export interface CreatePaymentQrPayload {
-	amount: number;
-}
-
-export const createPaymentQr = async (payload: CreatePaymentQrPayload) => {
-	return apiClient.post(`/payment/qr`, payload, {
-		params: toHttpParams({ amount: payload.amount }),
-	});
+  return apiClient.post(
+    `/driver/checkin/self`,
+    { ticketNumber, qrCode },
+    { headers: getAuthHeaders() },
+  );
 };
 
 export interface CreateBookingPassengerPayload {
-	seatId: string;
-	seatNumber: string;
-	fullName: string;
-	thaiId: string;
-	phone: string;
-	passengerType: string;
+  seatId: string;
+  seatNumber: string;
+  fullName: string;
+  thaiId: string;
+  phone: string;
+  passengerType: string;
 }
 
 export interface CreateBookingPayload {
-	tripId: string;
-	travelDate: string;
-	originProvinceId: string;
-	destinationProvinceId: string;
-	boardingPointId: string;
-	dropOffPointId: string;
-	passengers: CreateBookingPassengerPayload[];
-	promoCode: string;
-	omiseChargeId: string;
+  tripId: string;
+  travelDate: string;
+  originProvinceId: string;
+  destinationProvinceId: string;
+  boardingPointId: string;
+  dropOffPointId: string;
+  passengers: CreateBookingPassengerPayload[];
+  promoCode: string;
 }
 export interface CreateBookingResponse {
-	bookingId: string,
-	bookingReference: string,
-	status: string,
-	expiresAt: string,
-	total: number,
-	addonTotal: number,
-	stampRedeemed: boolean,
-	stampDiscount: number,
-	stampsLeft: number
+  bookingId: string;
+  bookingReference: string;
+  status: string;
+  expiresAt: string;
+  total: number;
+  addonTotal: number;
+  stampRedeemed: boolean;
+  stampDiscount: number;
+  stampsLeft: number;
 }
 
-export const createBooking = async (payload: CreateBookingPayload): Promise<CreateBookingResponse> => {
-	return apiClient.post(`/bookings`, payload, {
-		headers: {
-			...getAuthHeaders(),
-			'Content-Type': 'application/json',
-		},
-	});
+export const createBooking = async (
+  payload: CreateBookingPayload,
+): Promise<CreateBookingResponse> => {
+  return apiClient.post(`/driver/bookings`, payload, {
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+  });
 };
 
-export const getPaymentTransaction = async (transactionId: string) => {
-	return apiClient.get(`/payment/transaction/${transactionId}`);
+export interface DriverBookingPaymentResponse {
+  bookingId: string;
+  paymentId?: string;
+  chargeId?: string;
+  status: string;
+  paymentStatus?: string;
+  payment_status?: string;
+  paymentMethod?: string;
+  qrCodeUrl?: string | null;
+  expiresAt?: string | null;
+}
+
+export const createDriverBookingPayment = async (bookingId: string) => {
+  return apiClient.post<DriverBookingPaymentResponse>(
+    `/driver/bookings/${bookingId}/payment`,
+    { paymentMethod: "promptpay" },
+    { headers: getAuthHeaders() },
+  );
 };
 
-export const getDriverRounds = async (limit: number = 10, offset: number = 0) => {
-	return apiClient.get(`/driver/rounds`, {
-		params: toHttpParams({ limit, offset }),
-		headers: getAuthHeaders(),
-	});
+export const getDriverBookingPayment = async (bookingId: string) => {
+  return apiClient.get<DriverBookingPaymentResponse>(
+    `/driver/bookings/${bookingId}/payment`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
+};
+
+export const getDriverRounds = async (
+  limit: number = 10,
+  offset: number = 0,
+) => {
+  return apiClient.get(`/driver/rounds`, {
+    params: toHttpParams({ limit, offset }),
+    headers: getAuthHeaders(),
+  });
 };
 
 export interface DriverLocationPayload {
-	latitude: number;
-	longitude: number;
-	speed_kmh: number;
-	heading_deg: number;
+  latitude: number;
+  longitude: number;
+  speed_kmh: number;
+  heading_deg: number;
 }
 
 export const updateDriverLocation = async (payload: DriverLocationPayload) => {
-	return apiClient.post(`/driver/location`, payload, {
-		headers: getAuthHeaders(),
-	});
+  return apiClient.post(`/driver/location`, payload, {
+    headers: getAuthHeaders(),
+  });
 };
 
 export const startShift = async <T = any>(payload: any): Promise<T> => {
-	try {
-		return await apiClient.post<T>('/driver/shift/start', payload, {
-			headers: getAuthHeaders(),
-		});
-	} catch (err) {
-		return getErrorData(err) as T;
-	}
+  try {
+    return await apiClient.post<T>("/driver/shift/start", payload, {
+      headers: getAuthHeaders(),
+    });
+  } catch (err) {
+    return getErrorData(err) as T;
+  }
 };
 
 export const stopShift = async <T = any>(payload: any): Promise<T> => {
-	try {
-		return await apiClient.post<T>('/driver/shift/stop', payload, {
-			headers: getAuthHeaders(),
-		});
-	} catch (err) {
-		return getErrorData(err) as T;
-	}
+  try {
+    return await apiClient.post<T>("/driver/shift/stop", payload, {
+      headers: getAuthHeaders(),
+    });
+  } catch (err) {
+    return getErrorData(err) as T;
+  }
 };
 
 export interface CallCustomerPayload {
-	booking_id?: string | null;
-	call_time: string;
-	user_id?: string | null;
-	result: string;
-	phone_number?: string | null;
-	ticket_number?: string | null;
+  booking_id?: string | null;
+  call_time: string;
+  user_id?: string | null;
+  result: string;
+  phone_number?: string | null;
+  ticket_number?: string | null;
 }
 
 export const getCallCustomerHistory = async (params: {
-	booking_id?: string | null;
-	phone_number?: string | null;
-	ticket_number?: string | null;
+  booking_id?: string | null;
+  phone_number?: string | null;
+  ticket_number?: string | null;
 }) => {
-	try {
-		const response = await apiClient.get('/driver/call-customer', {
-			params: toHttpParams(params),
-			headers: getAuthHeaders(),
-		});
-		return response || [];
-	} catch (err: any) {
-		if (getErrorStatus(err) === 404) {
-			console.warn('Nova API endpoint /driver/call-customer is not available yet.');
-			return [];
-		}
-		return [];
-	}
+  try {
+    const response = await apiClient.get("/driver/call-customer", {
+      params: toHttpParams(params),
+      headers: getAuthHeaders(),
+    });
+    return response || [];
+  } catch (err: any) {
+    if (getErrorStatus(err) === 404) {
+      console.warn(
+        "Nova API endpoint /driver/call-customer is not available yet.",
+      );
+      return [];
+    }
+    return [];
+  }
 };
 
 export const saveCallCustomer = async (payload: CallCustomerPayload) => {
-	try {
-		return await apiClient.post('/driver/call-customer', payload, {
-			headers: getAuthHeaders(),
-		});
-	} catch (err: any) {
-		if (getErrorStatus(err) === 404) {
-			console.warn('Nova API endpoint /driver/call-customer is not available yet.');
-			return { skipped: true };
-		}
-		throw err;
-	}
+  try {
+    return await apiClient.post("/driver/call-customer", payload, {
+      headers: getAuthHeaders(),
+    });
+  } catch (err: any) {
+    if (getErrorStatus(err) === 404) {
+      console.warn(
+        "Nova API endpoint /driver/call-customer is not available yet.",
+      );
+      return { skipped: true };
+    }
+    throw err;
+  }
 };
 
 export default apiClient;
