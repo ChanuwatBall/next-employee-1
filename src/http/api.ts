@@ -568,6 +568,22 @@ export const checkInSelf = async (ticketNumber: string, qrCode: string) => {
   );
 };
 
+// 
+export const passengerPrice=(routeId:any , tripId:any)=>{
+  return apiClient.get(
+    `/driver/routes/${routeId}/tier-prices?tripId=${tripId}`, 
+    { headers: getAuthHeaders() },
+  ) 
+}
+///api/driver/payment-methods
+export const paymentsMethod=()=>{
+  return apiClient.get(
+    `/driver/payment-methods`, 
+    { headers: getAuthHeaders() },
+  ).then(res =>{
+    return res?.data
+  })
+}
 export interface CreateBookingPassengerPayload {
   seatId: string;
   seatNumber: string;
@@ -633,6 +649,14 @@ export const createDriverBookingPayment = async (bookingId: string) => {
 export const getDriverBookingPayment = async (bookingId: string) => {
   return apiClient.get<DriverBookingPaymentResponse>(
     `/driver/bookings/${bookingId}/payment`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
+};
+export const getDriverBooking  = async (bookingId: string) => {
+  return apiClient.get<DriverBookingPaymentResponse>(
+    `/driver/bookings/${bookingId}`,
     {
       headers: getAuthHeaders(),
     },

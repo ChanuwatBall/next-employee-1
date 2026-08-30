@@ -42,6 +42,7 @@ export interface TripDetail {
   id: string;
   bus_type_id: string;
   departure_time: string;
+  name:string;
   arrival_time: string;
   date: string;
   price: number;
@@ -57,6 +58,7 @@ export interface TripDetail {
   trip_type: string;
   bus_stops?: BusStop[];
   bus_type?: BusType;
+  onboard_ticket_sales_enabled: Boolean;
   route_id?: {
     id: string,
     origin: string,

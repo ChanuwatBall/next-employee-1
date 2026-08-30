@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getBookingDetail } from "../http/api";
+import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getBookingDetail, getDriverBooking } from "../http/api";
 import { useParams, useHistory } from "react-router-dom";
 import {
     IonPage,
@@ -48,6 +48,7 @@ interface Seat {
     row: number;
     col: number;
     status: SeatStatus;
+    bookingId: string ;
     floor: number;
     price?: number;
     ticket_id: null | {
@@ -156,6 +157,10 @@ export function isSpecialCell(label: string | null): boolean {
     return label !== null && SPECIAL_CELLS.includes(label);
 }
 
+export function canSellOnboardTickets(trip: Partial<TripDetail> | null | undefined): boolean {
+    return Boolean(trip?.onboard_ticket_sales_enabled === true);
+}
+
 // --- Main Page ---
 const PlanChair: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -216,7 +221,8 @@ const PlanChair: React.FC = () => {
                         status: s.status as SeatStatus,
                         floor: s.floor,
                         price: s.price,
-                        ticket_id: null
+                        ticket_id: null ,
+                        ...s
                     }));
 
                     for (const ms of mappedSeats) {
@@ -271,6 +277,11 @@ const PlanChair: React.FC = () => {
     }, [id]);
 
     const openSaleModal = () => {
+        if (!canSellOnboardTickets(trip)) {
+            iontoast({ message: "การขายตั๋วบนรถถูกปิดใช้งานสำหรับ trip นี้", duration: 2200, color: "warning", position: "top" });
+            return;
+        }
+
         if (selectedSeats.length === 0) {
             iontoast({ message: "กรุณาเลือกที่นั่งว่างก่อนขายตั๋ว", duration: 2000, color: "warning", position: "top" });
             return;
@@ -291,6 +302,11 @@ const PlanChair: React.FC = () => {
     };
 
     const toggleSeat = useCallback(async (seat: Seat) => {
+        if (!canSellOnboardTickets(trip)) {
+            iontoast({ message: "ไม่สามารถขายตั๋วบนรถได้ เนื่องจากการขายตั๋วบนรถถูกปิด", duration: 2200, color: "warning", position: "top" });
+            return;
+        }
+        console.log("toggleSeat seat: ",seat)
         if (seat.status === "booked" || seat.status === "unavailable") {
             console.log("seat ", seat)
         //     try {
@@ -302,8 +318,16 @@ const PlanChair: React.FC = () => {
         //         console.log("callHistory ", callHistory)
 
         //         const seatupdate: any = { ...seat, call_record: callHistory || [] };
-                setSelectedSeatData(seat);
+               
                 setShowSeatModal(true);
+                if(seat?.bookingId){
+                  const bookingde:any = await  getDriverBooking(seat?.bookingId)
+                  console.log("bookingde ",bookingde)
+                  const pass =  bookingde?.passengers.find((e:any)=> e.seatNumber === seat?.number )
+                  seat = {...seat , ...{passenger:pass}}
+                  console.log("seat ",seat)
+                }
+                 setSelectedSeatData(seat);
         //     } catch (error) {
         //         console.error("Error fetching call info:", error);
         //     }
@@ -318,7 +342,7 @@ const PlanChair: React.FC = () => {
         ); 
         }
 
-    }, [id]);
+    }, [id, trip, iontoast]);
 
     const handleContinue = () => history.goBack();
 
@@ -451,7 +475,7 @@ const PlanChair: React.FC = () => {
                     {trip && (
                         <div className="planchair-header w-full mb-6 text-center">
                             <h2 className="text-xl font-black text-slate-800">
-                                {trip.route_id?.origin} → {trip.route_id?.destination}
+                                {trip?.name}  
                             </h2>
                             <p className="text-slate-500 text-sm">
                                 {moment(trip.date).format('DD MMM YYYY')} | {trip.departure_time} - {trip.arrival_time}
@@ -545,7 +569,7 @@ const PlanChair: React.FC = () => {
                 </div>
             </IonContent>
 
-            {selectedSeats.length > 0 && (
+            {canSellOnboardTickets(trip) && selectedSeats.length > 0 && (
                 <div className="sale-ticket-footer">
                     <div className="sale-ticket-summary">
                         <span>{selectedSeats.length} ที่นั่ง</span>
@@ -585,7 +609,7 @@ const PlanChair: React.FC = () => {
                             <div className="flex flex-col  ">
                                 {/* Header */}
                                 <div className="flex items-center justify-between px-5 pt-5 pb-4 ">
-                                    <h2 className="text-lg font-bold text-slate-800 ion-margin-start">ที่นั่ง {selectedSeatData.seat_number}</h2>
+                                    <h2 className="text-lg font-bold text-slate-800 ion-margin-start">ที่นั่ง {selectedSeatData.id}</h2>
                                     <button
                                         onClick={() => { setShowSeatModal(false); setSelectedSeatData(null); }}
                                         className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 relative ion-margin-end"
@@ -607,7 +631,7 @@ const PlanChair: React.FC = () => {
                                                     style={{ position: "absolute", right: "20%", top: "20%", color: "#30d203" }} />
                                             }
                                         </div>
-                                        <p className="text-slate-400 mt-3 text-base font-medium">{selectedSeatData.seat_number}</p>
+                                        <p className="text-slate-400 mt-3 text-base font-medium">{selectedSeatData.id}</p>
                                     </IonCol>
                                 </IonRow>
 
@@ -615,7 +639,7 @@ const PlanChair: React.FC = () => {
                                 <div className="flex-1 w-full flex flex-col items-center pt-4" >
 
                                     <div className="modal-card-box" >
-                                        {ticket && (
+                                        {selectedSeatData && (
                                             <div className="modal-inner-card">
                                                 <div className="flex justify-between items-start">
                                                     <span className="text-sm text-slate-500">สถานะ</span>
@@ -625,11 +649,11 @@ const PlanChair: React.FC = () => {
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-sm text-slate-500">ชื่อ-สกุล</span>
-                                                    <span className="text-sm font-semibold text-slate-800">{ticket.passenger_name}</span>
+                                                    <span className="text-sm font-semibold text-slate-800">{selectedSeatData?.passenger?.fullName}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-sm text-slate-500">หมายเลขโทรศัพท์</span>
-                                                    <span className="text-sm font-semibold text-slate-800">{ticket.passenger_phone}</span>
+                                                    <span className="text-sm font-semibold text-slate-800">{selectedSeatData?.passenger?.phone}</span>
                                                 </div>
                                             </div>
                                         )}

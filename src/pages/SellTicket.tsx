@@ -12,6 +12,8 @@ import {
   IonList,
   IonLoading,
   IonPage,
+  IonRadio,
+  IonRadioGroup,
   IonSelect,
   IonSelectOption,
   IonTitle,
@@ -34,6 +36,8 @@ import {
   getDriverBookingDetail,
   getTripDetail,
   getTripSeats,
+  passengerPrice,
+  paymentsMethod,
 } from "../http/api";
 import { TripDetail } from "../types/trip";
 // import { downloadReceiptPdf, ReceiptPdfData } from "../utils/receiptPdf";
@@ -64,17 +68,15 @@ interface SellTicketLocationState {
   trip?: TripDetail;
 }
 
-const passengerTypeOptions = [
-  { value: "da0b8eea-110f-43c1-84a7-e127dd96c3c8", label: "ทั่วไป" },
-  { value: "fa3c874f-b3d3-4759-8aaa-e1c3da483aea", label: "เด็ก" },
-  { value: "ea073cd9-68e1-4d3a-b4ed-c394e970f766", label: "สวัสดิการแห่งรัฐ" },
-  { value: "d76dd5c9-b36a-41d8-8da9-8f6798f4a2e9", label: "ผู้สูงอายุ" },
-  { value: "84368cf5-0460-4427-91c0-52ad377115ce", label: "พระภิกษุ/สามเณร" },
-  { value: "fe44251a-3318-4bf2-9da9-6297965bfb8d", label: "ทหาร" },
-];
+// const passengerTypeOptions = [
+//   { value: "da0b8eea-110f-43c1-84a7-e127dd96c3c8", label: "ทั่วไป" },
+//   { value: "fa3c874f-b3d3-4759-8aaa-e1c3da483aea", label: "เด็ก" },
+//   { value: "ea073cd9-68e1-4d3a-b4ed-c394e970f766", label: "สวัสดิการแห่งรัฐ" },
+//   { value: "d76dd5c9-b36a-41d8-8da9-8f6798f4a2e9", label: "ผู้สูงอายุ" },
+//   { value: "84368cf5-0460-4427-91c0-52ad377115ce", label: "พระภิกษุ/สามเณร" },
+//   { value: "fe44251a-3318-4bf2-9da9-6297965bfb8d", label: "ทหาร" },
+// ];
 
-const getPassengerTypeLabel = (value: string) =>
-  passengerTypeOptions.find((option) => option.value === value)?.label || value;
 
 const extractBookingReference = (booking: any) =>
   booking?.bookingReference ||
@@ -90,6 +92,55 @@ const normalizePaymentMethod = (method: SalePaymentMethod) => {
   if (method === "cash") return "เงินสด";
   if (method === "qrcode") return "QR Code";
   return "-";
+};
+
+export interface PassengerTypeOption {
+  id?: string;
+  code: string;
+  name: string;
+  description?: string;
+  defaultPrice?: number;
+  price: number;
+  priceSource?: string;
+}
+
+export const resolvePassengerTypePrice = ({
+  passengerType,
+  passengerTypeOptions,
+  seatPrice,
+  tripPrice,
+}: {
+  passengerType: string;
+  passengerTypeOptions: PassengerTypeOption[];
+  seatPrice?: number;
+  tripPrice?: number;
+}) => {
+  const matchedOption = passengerTypeOptions.find(
+    (option) => option.code === passengerType,
+  );
+
+  if (matchedOption && typeof matchedOption.price === "number") {
+    return matchedOption.price;
+  }
+
+  return seatPrice ?? tripPrice ?? 0;
+};
+
+export const resolvePaymentTotal = ({
+  paymentData,
+  fallbackTotal,
+}: {
+  paymentData?: any;
+  fallbackTotal?: number;
+}) => {
+  const rawTotal = paymentData?.total ?? paymentData?.amount ?? paymentData?.amountTotal ?? paymentData?.netTotal;
+  const numericTotal = Number(rawTotal);
+
+  if (Number.isFinite(numericTotal) && numericTotal >= 0) {
+    return numericTotal;
+  }
+
+  return Number(fallbackTotal ?? 0);
 };
 
 const SellTicket: React.FC = () => {
@@ -129,6 +180,60 @@ const SellTicket: React.FC = () => {
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
+  const [passengerTypeOptions, setPassengerType] = useState<PassengerTypeOption[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<
+    Array<{
+      group: string;
+      groupName: string;
+      methods: Array<{
+        id: string;
+        source: string;
+        group: string;
+        groupName: string;
+        name: string;
+        fee: number;
+        onlineEnabled: boolean;
+        offlineEnabled: boolean;
+      }>;
+    }>
+  >([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+
+  const getPassengerTypeLabel = (value: string) =>
+    passengerTypeOptions.find((option) => option.code === value)?.name || value;
+
+  const availablePaymentMethods = useMemo(
+    () =>
+      paymentMethod.flatMap((group) =>
+        (group.methods || []).filter(
+          (method) => method.onlineEnabled || method.offlineEnabled,
+        ),
+      ),
+    [paymentMethod],
+  );
+
+  const handlePaymentSelectionNext = () => {
+    const selected = availablePaymentMethods.find(
+      (method) => method.id === selectedPaymentMethod || method.source === selectedPaymentMethod,
+    ) || availablePaymentMethods[0];
+
+    if (!selected) {
+      return;
+    }
+
+    const isCash =
+      (selected.source || "").toLowerCase() === "cash" ||
+      (selected.group || "").toLowerCase() === "cash";
+
+    if (isCash) {
+      setSalePaymentMethod("cash");
+      setSaleStep("cash");
+      return;
+    }
+
+    setSalePaymentMethod("qrcode");
+    void startQrPayment();
+  };
 
   const selectedSeatNumbers = useMemo(
     () =>
@@ -145,11 +250,15 @@ const SellTicket: React.FC = () => {
         const seat = saleSeats.find(
           (selectedSeat) => selectedSeat.number === passenger.seatNumber,
         );
-        const price =
-          seat?.price ?? trip?.price ?? trip?.route_id?.base_price ?? 0;
+        const price = resolvePassengerTypePrice({
+          passengerType: passenger.passengerType,
+          passengerTypeOptions,
+          seatPrice: seat?.price,
+          tripPrice: trip?.price ?? trip?.route_id?.base_price ?? 0,
+        });
         return { passenger, seat, price };
       }),
-    [salePassengers, saleSeats, trip],
+    [salePassengers, saleSeats, trip, passengerTypeOptions],
   );
 
   const saleTotalPrice = saleSummaryItems.reduce(
@@ -160,14 +269,18 @@ const SellTicket: React.FC = () => {
   const cashChange = Math.max(cashReceivedAmount - saleTotalPrice, 0);
   const qrPaymentImage = qrPaymentData?.qrCodeUrl;
   const qrPaymentText = qrPaymentData?.status;
+  const qrPaymentTotal = resolvePaymentTotal({
+    paymentData: qrPaymentData,
+    fallbackTotal: saleTotalPrice,
+  });
 
   useEffect(() => {
     const fetchSaleContext = async () => {
-      const companyState = JSON.parse(
-        localStorage.getItem("company") || "null",
-      );
-      console.log("company from state: ", companyState);
-      if (companyState) setCompany(companyState);
+      // const companyState = JSON.parse(
+      //   localStorage.getItem("company") || "null",
+      // );
+      // console.log("company from state: ", companyState);
+      // if (companyState) setCompany(companyState);
 
       setIsLoading(true);
       try {
@@ -177,6 +290,25 @@ const SellTicket: React.FC = () => {
         ]);
 
         setTrip(tripData as TripDetail);
+        console.log("fetchSaleContext tripData ", tripData);
+        const optpassprice = await passengerPrice(
+          tripData?.route_id?.id,
+          tripData?.id,
+        );
+        console.log("fetchSaleContext optpassprice ", optpassprice);
+        setPassengerType(optpassprice);
+        const payments = await paymentsMethod();
+        console.log("payments ", payments);
+        const methods = Array.isArray(payments) ? payments : [];
+        setPaymentMethod(methods);
+
+        const firstAvailable = methods
+          .flatMap((group) => group.methods || [])
+          .find((method) => method.onlineEnabled || method.offlineEnabled);
+
+        if (firstAvailable) {
+          setSelectedPaymentMethod(firstAvailable.id || firstAvailable.source || "");
+        }
 
         if (saleSeats.length === 0) {
           const seatsFromQuery = (seatData?.seats || [])
@@ -199,6 +331,7 @@ const SellTicket: React.FC = () => {
       } finally {
         setIsLoading(false);
       }
+
     };
 
     void fetchSaleContext();
@@ -440,6 +573,7 @@ const SellTicket: React.FC = () => {
       );
 
       const payment = await createDriverBookingPayment(bookingId);
+      console.log("payment ",payment)
       setQrPaymentData(payment);
       // Poll by booking ID, matching the customer payment flow.
       setQrTransactionId(bookingId);
@@ -768,10 +902,10 @@ const SellTicket: React.FC = () => {
                       >
                         {passengerTypeOptions.map((option) => (
                           <IonSelectOption
-                            key={option.value}
-                            value={option.value}
+                            key={option.code}
+                            value={option.code}
                           >
-                            {option.label}
+                            {option.name}
                           </IonSelectOption>
                         ))}
                       </IonSelect>
@@ -847,23 +981,35 @@ const SellTicket: React.FC = () => {
                 <strong>{saleTotalPrice.toLocaleString()} บาท</strong>
               </div>
 
+              {availablePaymentMethods.length > 0 ? (
+                <IonRadioGroup
+                  value={selectedPaymentMethod}
+                  onIonChange={(event) =>
+                    setSelectedPaymentMethod(
+                      `${event.detail.value || ""}`,
+                    )
+                  }
+                >
+                  {availablePaymentMethods.map((method) => (
+                    <IonItem mode="md" key={method.id || method.name} lines="none" button>
+                      <IonLabel>{method.name}</IonLabel>
+                      <IonRadio
+                        slot="start"
+                        value={method.id || method.source || method.name}
+                      />
+                    </IonItem>
+                  ))}
+                </IonRadioGroup>
+              ) : null}
+
               <div className="sale-payment-footer">
                 <IonButton
                   expand="block"
                   mode="ios"
                   color="primary"
-                  onClick={startQrPayment}
+                  onClick={handlePaymentSelectionNext}
                 >
-                  QR Code
-                </IonButton>
-                <IonButton
-                  expand="block"
-                  mode="ios"
-                  fill="outline"
-                  color="primary"
-                  onClick={() => setSaleStep("cash")}
-                >
-                  ชำระเงินสด
+                  ถัดไป
                 </IonButton>
               </div>
               <IonButton
@@ -935,7 +1081,7 @@ const SellTicket: React.FC = () => {
               <div className="sale-summary-card">
                 <div className="sale-summary-row">
                   <span>ยอดชำระ</span>
-                  <strong>{saleTotalPrice.toLocaleString()} บาท</strong>
+                  <strong>{qrPaymentTotal.toLocaleString()} บาท</strong>
                 </div>
                 <div className="sale-summary-row">
                   <span>สถานะ</span>
@@ -1036,7 +1182,7 @@ const SellTicket: React.FC = () => {
                 </div>
                 <div className="sale-summary-row">
                   <span>ยอดชำระ</span>
-                  <strong>{successTotal.toLocaleString()} บาท</strong>
+                  <strong>{qrPaymentTotal.toLocaleString()} บาท</strong>
                 </div>
                 {salePaymentMethod === "cash" && (
                   <>
