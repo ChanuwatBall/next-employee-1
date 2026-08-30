@@ -1,6 +1,6 @@
 import { faArrowDown, faArrowLeft, faArrowRight, faArrowUp, faCarSide, faExpand, faLocationDot, faQrcode } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonGrid, IonRow, IonCol, IonText, IonBackButton, IonLabel, IonIcon, IonChip, IonAccordion, IonAccordionGroup, IonBadge, IonModal, IonItem, IonInput, IonList, IonLoading, IonToast, IonTextarea, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonGrid, IonRow, IonCol, IonText, IonBackButton, IonLabel, IonIcon, IonChip, IonAccordion, IonAccordionGroup, IonBadge, IonModal, IonItem, IonInput, IonList, IonLoading, IonToast, IonTextarea, IonRefresher, IonRefresherContent, IonSpinner } from '@ionic/react';
 import { speedometerOutline, batteryChargingOutline, documentTextOutline, qrCodeOutline, giftOutline } from 'ionicons/icons';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
@@ -49,6 +49,8 @@ const TripDetail: React.FC = () => {
   });
 
   const [watchId, setWatchId] = useState<string | null>(null);
+  const watchIdRef = React.useRef<string | null>(null);
+  const [isInShift, setIsInShift] = useState<boolean>(false);
 
   const [stopFormData, setStopFormData] = useState({
     stop_km: 0,
@@ -72,6 +74,8 @@ const TripDetail: React.FC = () => {
 
       // Save active shift status to localStorage
       localStorage.setItem('active_shift_id', id);
+      localStorage.setItem('active_shift_trip_id', response?.data?.trip_id);
+      setIsInShift(true);
 
       setShowStartModal(false);
       setToastMsg("เริ่มเที่ยวสำเร็จ");
@@ -102,6 +106,7 @@ const TripDetail: React.FC = () => {
 
       // Clear active shift status
       localStorage.removeItem('active_shift_id');
+      setIsInShift(false);
 
       setShowStopModal(false);
       setToastMsg("จบเที่ยวสำเร็จ");
@@ -120,6 +125,12 @@ const TripDetail: React.FC = () => {
 
   const startTracking = async () => {
     console.log("Starting tracking...");
+
+    if (watchIdRef.current) {
+      console.log("Tracking already active with watch id:", watchIdRef.current);
+      return;
+    }
+
     try {
       const locationPermission = await Geolocation.requestPermissions();
       console.log("Geolocation permission: ", JSON.stringify(locationPermission));
@@ -127,7 +138,7 @@ const TripDetail: React.FC = () => {
       if (locationPermission.location !== 'granted' && locationPermission.coarseLocation !== 'granted') {
         throw new Error("Location permission was not granted");
       }
-      console.log("Capacitor.getPlatform(): ",Capacitor.getPlatform())
+      console.log("Capacitor.getPlatform(): ", Capacitor.getPlatform())
       if (Capacitor.getPlatform() === 'android') {
         const notificationPermission = await ForegroundService.requestPermissions();
         console.log("Foreground service permission: ", JSON.stringify(notificationPermission));
@@ -170,18 +181,35 @@ const TripDetail: React.FC = () => {
           }).catch(console.error);
         }
       });
+
+      watchIdRef.current = trackingWatchId;
       setWatchId(trackingWatchId);
       console.log("Geolocation watch started: ", trackingWatchId);
     } catch (error) {
       console.error("Tracking error:", JSON.stringify(error));
-      throw error;
+      try {
+        navigator.geolocation.watchPosition((position) => {
+          if (position) {
+            console.log("position ", position);
+            updateDriverLocation({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              speed_kmh: (position.coords.speed || 0) * 3.6,
+              heading_deg: position.coords.heading || 0
+            }).catch(console.error);
+          }
+        });
+      } catch (fallbackError) {
+        console.error("Fallback geolocation error:", fallbackError);
+      }
     }
   };
 
   const stopTracking = async () => {
     try {
-      if (watchId) {
-        await Geolocation.clearWatch({ id: watchId });
+      if (watchIdRef.current) {
+        await Geolocation.clearWatch({ id: watchIdRef.current });
+        watchIdRef.current = null;
         setWatchId(null);
       }
       if (Capacitor.getPlatform() === 'android') {
@@ -230,8 +258,39 @@ const TripDetail: React.FC = () => {
   }
 
   useEffect(() => {
-    getTrip()
-  }, [])
+    const syncShiftStatus = () => {
+      const activeShiftId = localStorage.getItem('active_shift_id');
+      setIsInShift(activeShiftId === id);
+    };
+
+    syncShiftStatus();
+    getTrip();
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'active_shift_id') {
+        syncShiftStatus();
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    if (isInShift) {
+      startTracking().catch((error) => {
+        console.error('Auto-start tracking failed:', error);
+      });
+      return;
+    }
+
+    if (watchIdRef.current) {
+      stopTracking();
+    }
+  }, [id, isInShift]);
+
   if (!trip) {
     return <TripDetailSkeleton />;
   }
@@ -360,6 +419,7 @@ const TripDetail: React.FC = () => {
                 </IonLabel>
               </BouceAnimation>
             </div>
+ 
 
             <BouceAnimation className=" card-stations  bg-white"
               duration={0.4} delay={0.5}  >
@@ -372,8 +432,9 @@ const TripDetail: React.FC = () => {
 
             <div style={{ width: "100%" }} >
               <BouceAnimation duration={0.4} delay={0.5} className='ion-text-left ion-padding' style={{ width: "100%" }}  >
-                <IonButton expand='block' mode='ios' color="success" className="rounded-xl" onClick={() => setShowStartModal(true)} disabled={!isToday}>
-                  เริ่มเที่ยว
+                <IonButton expand='block' mode='ios' color="success" className="rounded-xl" onClick={() => setShowStartModal(true)} disabled={!isToday || isInShift}>
+                  {isInShift ? `กำลังอยู่ในกะ` : 'เริ่มเที่ยว'} &nbsp;
+                   {isInShift &&  <IonSpinner name="dots"  /> }
                 </IonButton>
                 <IonButton expand='block' mode='ios' color="danger" className="rounded-xl" onClick={() => endTask()} >
                   จบเที่ยว
