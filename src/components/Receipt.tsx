@@ -106,9 +106,12 @@ export async function printReceipt(PRINTER_ADDRESS: string, element: any): Promi
  
 }
 
-const ReceiptModal = ({ receiptData, open, setOpen, company }: ReceiptProps & { company: any }) => {
+const ReceiptModal = ({ receiptData, open, setOpen }: ReceiptProps) => {
     const [toast, dimisstoast] = useIonToast();
     const [ionloading, dimismissLoading] =  useIonLoading();
+    const bookingDetail = receiptData?.bookingDetail;
+    const bookingCompany = bookingDetail?.company;
+    const bookingTerms = bookingDetail?.terms;
 
      const fetchReceiptData = async () => {
             if (open) {
@@ -202,8 +205,8 @@ const ReceiptModal = ({ receiptData, open, setOpen, company }: ReceiptProps & { 
                         <IonRow>
                             <IonCol size="12" className="ion-text-center">
                                 <IonLabel>
-                                    <h2 className="ion-text-center"><b>{company?.name}</b></h2>
-                                    <IonLabel><small>{company?.address}  | โทร. / Tel. {company?.phone}</small></IonLabel>
+                                    <h2 className="ion-text-center"><b>{bookingCompany?.name}</b></h2>
+                                    <IonLabel><small>{bookingCompany?.address}  | โทร. / Tel. {bookingCompany?.phone}</small></IonLabel>
                                 </IonLabel><br />
                             </IonCol>
                             <IonCol size="12">
@@ -212,7 +215,7 @@ const ReceiptModal = ({ receiptData, open, setOpen, company }: ReceiptProps & { 
                                 </IonLabel>
                                 <div style={{  width: '100%',paddingTop:"0.5em" }}>
                                     <IonLabel className="booking-ref-num"> Booking Ref: {receiptData?.bookingReference}</IonLabel><br/>
-                                    <IonLabel className="booking-date" > Booking Date {moment(receiptData?.bookingDetail.bookingDate).format("DD/MM/YYYY")}</IonLabel>
+                                    <IonLabel className="booking-date" > Booking Date {moment(bookingDetail?.bookingDate).format("DD/MM/YYYY")}</IonLabel>
                                 </div>
                             </IonCol>
                             <IonCol size="12" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' ,marginTop:".5em"}}>
@@ -305,7 +308,7 @@ const ReceiptModal = ({ receiptData, open, setOpen, company }: ReceiptProps & { 
                                 </small>
                             ))} */}
                             <small className="condition-text">
-                                {company?.ticketTerms}
+                                {bookingTerms}
                             </small>
                         </div> 
 

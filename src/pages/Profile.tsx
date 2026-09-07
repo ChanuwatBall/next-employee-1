@@ -50,6 +50,7 @@ import './css/Profile.css';
 import { Edit } from 'lucide-react';
 import { faBus, faCoins } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import moment from 'moment';
 
 const Profile: React.FC = () => {
   const history = useHistory();
@@ -243,7 +244,7 @@ const Profile: React.FC = () => {
               </div>
               <div className="info-row">
                 <div className="label">วันหมดอายุใบขับขี่</div>
-                <div className="value">{data.driver.license_expiry}</div>
+                <div className="value">{data.driver?.license_expiry ? moment(data.driver?.license_expiry).format('DD MMM YYYY') : '-'}</div>
               </div>
               <div className="info-row">
                 <div className="label">เบอร์โทร</div>

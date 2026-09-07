@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getBookingDetail, getDriverBooking } from "../http/api";
+import { checkInSelf, getTripSeats, getDriverTripPassengers, getTripDetail, getCallCustomerHistory, saveCallCustomer, getBookingDetail, getDriverBooking, getDriverBookingDetail } from "../http/api";
 import { useParams, useHistory } from "react-router-dom";
 import {
     IonPage,
@@ -404,23 +404,23 @@ const PlanChair: React.FC = () => {
        if (!seatData) return;
     //    setIsSaving(true);
        try {
-           const ticket_number = seatData?.ticket_id?.ticket_number;
+           const ticket_number = seatData?.bookingId
            if (!ticket_number) {
                throw new Error('ไม่พบหมายเลขตั๋ว');
            }
 
-           const { data: ticket } = await supabase.from('tickets').select('*').eq('ticket_number', ticket_number).single();
-           if (!ticket?.booking_id) {
-               throw new Error('ไม่พบ booking สำหรับตั๋วนี้');
-           }
-           console.log("ticket ", ticket)
+        //    const { data: ticket } = await supabase.from('tickets').select('*').eq('ticket_number', ticket_number).single();
+        //    if (!ticket?.booking_id) {
+        //        throw new Error('ไม่พบ booking สำหรับตั๋วนี้');
+        //    }
+        //    console.log("ticket ", ticket)
            // prefer API helper to get full booking detail
-           const bookingDetail = await getBookingDetail(ticket.booking_id);
+           const bookingDetail = await getDriverBookingDetail(seatData?.bookingId);
 
            // build receipt payload
            const passengers = (bookingDetail?.passengers && bookingDetail.passengers.length)
                ? bookingDetail.passengers.map((p: any) => ({ fullName: p.fullName, phone: p.phone, seatNumber: p.seatNumber, passengerType: p.passengerType }))
-               : [{ fullName: ticket?.passenger_name , phone: ticket?.passenger_phone || seatData?.ticket_id?.passenger_phone || '-', seatNumber: ticket?.seat_number  , passengerType: ticket?.passenger_type}];
+               : [{ fullName: seatData?.passenger_name , phone: seatData?.passenger_phone || seatData?.ticket_id?.passenger_phone || '-', seatNumber: seatData?.seat_number  , passengerType: seatData?.passenger_type}];
 
            const seats = bookingDetail?.seats?.length ? bookingDetail.seats : [seatData?.seat_number || seatData?.ticket_id?.seat_number];
            const total = bookingDetail?.total ?? Number(seatData?.ticket_id?.price || 0);
@@ -435,7 +435,7 @@ const PlanChair: React.FC = () => {
                passengers,
                seats,
                qrCodeImage: qrImage,
-               bookingReference: bookingDetail?.bookingReference || bookingDetail?.id || ticket.booking_id,
+               bookingReference: bookingDetail?.bookingReference || bookingDetail?.id || seatData?.bookingId,
                paymentMethod: bookingDetail?.paymentMethod || '-',
                paymentStatus: bookingDetail?.paymentStatus || '-',
                total: total,
