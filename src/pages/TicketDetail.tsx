@@ -21,6 +21,9 @@ const TicketDetail: React.FC = () => {
   const [iontoast] = useIonToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  const getTicketNumber = (ticket: any) =>
+    ticket?.ticket_number ?? ticket?.ticketNumber ?? ticket?.ticket?.ticketNumber ?? ticket?.ticket?.ticket_number;
+
   const isToday = booking ? moment(booking.date).isSame(moment(), 'day') : false;
 
   const { startCall, showResultSheet, setShowResultSheet, submitCallResult, currentPhone, metadata } = usePhoneCallFlow();
@@ -73,8 +76,12 @@ const TicketDetail: React.FC = () => {
       //   return;
       // }
 
-      const qrBookingCode = await QRCode.toDataURL(ticket.ticket_number);
-      const rescheckin = await checkInSelf(ticket.ticket_number, qrBookingCode);
+      const ticketNumber = getTicketNumber(ticket);
+      if (!ticketNumber) {
+        throw new Error('ไม่พบเลขตั๋วสำหรับผู้โดยสารนี้');
+      }
+      const qrBookingCode = await QRCode.toDataURL(String(ticketNumber));
+      const rescheckin = await checkInSelf(ticketNumber, qrBookingCode);
 
       if (rescheckin.error) {
         console.error('Error checking in ticket:', rescheckin.error);
@@ -86,7 +93,7 @@ const TicketDetail: React.FC = () => {
         if (!prev) return prev;
         return {
           ...prev,
-          tickets: prev.tickets.map((t: any) => t.ticket_number === ticket.ticket_number ? { ...t, checked_in_at: checkedAt } : t)
+          tickets: prev.tickets.map((t: any) => getTicketNumber(t) === ticketNumber ? { ...t, checked_in_at: checkedAt } : t)
         };
       });
 
@@ -118,30 +125,42 @@ const TicketDetail: React.FC = () => {
       //   return;
       // }
 
-      const promises = booking.tickets.map(async (ticket: any) => {
+      const results = await Promise.all(booking.tickets.map(async (ticket: any) => {
         if (ticket.checked_in_at) return;
-        const qrBookingCode = await QRCode.toDataURL(ticket.ticket_number);
-        const rescheckin = await checkInSelf(ticket.ticket_number, qrBookingCode);
+        const ticketNumber = getTicketNumber(ticket);
+        if (!ticketNumber) {
+          throw new Error(`ไม่พบเลขตั๋วของ ${ticket.passenger_name || ticket.passengerName || 'ผู้โดยสาร'}`);
+        }
+        const qrBookingCode = await QRCode.toDataURL(String(ticketNumber));
+        const rescheckin = await checkInSelf(ticketNumber, qrBookingCode);
         if (rescheckin.error) {
           iontoast({ message: 'เช็คอิน ' + ticket.passenger_name + ' ไม่สำเร็จ', color: 'danger', duration: 2000, position: "top" });
+          return null;
         } else {
           iontoast({ message: 'เช็คอิน ' + ticket.passenger_name + ' สำเร็จ', color: 'success', duration: 2000, position: "top" });
+          return ticketNumber;
         }
-      });
-
-      await Promise.all(promises);
+      }));
+      const checkedInTicketNumbers = results.filter(Boolean);
 
       setBooking((prev: any) => {
         if (!prev) return prev;
         return {
           ...prev,
-          tickets: prev.tickets.map((t: any) => ({ ...t, checked_in_at: t.checked_in_at || checkedAt }))
+          tickets: prev.tickets.map((t: any) =>
+            checkedInTicketNumbers.includes(getTicketNumber(t))
+              ? { ...t, checked_in_at: checkedAt }
+              : t,
+          )
         };
       });
 
-      iontoast({ message: 'ดำเนินการเช็คอินเรียบร้อยแล้ว', color: 'success', duration: 2000 });
-    } catch (err) {
+      if (checkedInTicketNumbers.length > 0) {
+        iontoast({ message: 'ดำเนินการเช็คอินเรียบร้อยแล้ว', color: 'success', duration: 2000 });
+      }
+    } catch (err: any) {
       console.error('Unexpected error in checkInAll:', err);
+      iontoast({ message: err?.message || 'เช็คอินไม่สำเร็จ', color: 'danger', duration: 2000 });
     } finally {
       setIsLoading(false);
     }
@@ -178,6 +197,10 @@ const TicketDetail: React.FC = () => {
         const qrDetail = JSON.parse(decoded);
         console.log("Decoded QR Detail:", qrDetail);
 
+        if (!qrDetail?.trip || !qrDetail?.bookingReference) {
+          throw new Error('QR ไม่มีข้อมูลเที่ยวรถหรือเลขอ้างอิงการจอง');
+        }
+
         // if (qrDetail?.source === "driver_cash_sale" && qrDetail?.bookingReference) {
         //   const localBookingRaw = localStorage.getItem(`driver_cash_sale_${qrDetail.bookingReference}`);
         //   if (localBookingRaw) {
@@ -185,29 +208,47 @@ const TicketDetail: React.FC = () => {
         //     return;
         //   }
         // }
-        const passengers: any = await getDriverTripPassengers(qrDetail.trip)
-        const tripData = await getTripDetail(qrDetail.trip)
+        const [passengersResponse, tripData] = await Promise.all([
+          getDriverTripPassengers(qrDetail.trip),
+          getTripDetail(qrDetail.trip),
+        ]);
 
-        console.log("passengers. ", passengers)
-        if (passengers?.error || !tripData) {
-          ionalert({
-            header: 'ไม่พบข้อมูลตั๋ว',
-            message: passengers?.error,
-            buttons: [
-              {
-                text: 'ตกลง',
-                role: "cancel",
-                handler: () => {
-                  dimissIonAlert();
-                  history.goBack();
-                }
-              }
-            ]
-          });
-          throw new Error(passengers?.error || 'Trip not found');
+        // The driver API has returned both a raw array and `{ passengers: [] }`
+        // across versions.  Normalise it before looking up the booking so a
+        // valid QR is not rejected with `passengers.filter is not a function`.
+        const passengers = Array.isArray(passengersResponse)
+          ? passengersResponse
+          : passengersResponse?.passengers ??
+            passengersResponse?.data?.passengers ??
+            passengersResponse?.data;
+
+        console.log("[TicketDetail] passengers response:", passengersResponse);
+        if (passengersResponse?.error) {
+          throw new Error(passengersResponse.error);
+        }
+        if (!Array.isArray(passengers)) {
+          throw new Error('รูปแบบข้อมูลผู้โดยสารไม่ถูกต้อง');
+        }
+        if (!tripData) {
+          throw new Error('ไม่พบข้อมูลเที่ยวรถ');
         }
 
-        const bookingPassengers = passengers.filter((e: any) => e.bookingReference === qrDetail.bookingReference);
+        const bookingReference = String(qrDetail.bookingReference).trim();
+        const bookingPassengers = passengers.filter((passenger: any) => {
+          const passengerReference =
+            passenger.bookingReference ?? passenger.booking_reference ??
+            passenger.booking?.bookingReference ?? passenger.booking?.booking_reference;
+          return String(passengerReference ?? '').trim() === bookingReference;
+        });
+
+        console.log('[TicketDetail] booking match:', {
+          bookingReference,
+          passengerReferences: passengers.map((passenger: any) =>
+            passenger.bookingReference ?? passenger.booking_reference ??
+            passenger.booking?.bookingReference ?? passenger.booking?.booking_reference,
+          ),
+          matches: bookingPassengers.length,
+        });
 
         if (bookingPassengers.length === 0) {
           throw new Error('ไม่พบข้อมูลผู้โดยสารในสำรองที่นั่งนี้');
@@ -224,11 +265,11 @@ const TicketDetail: React.FC = () => {
           dropOffPoint: bookingPassengers[0].dropoffStop,
           busNumber: tripData.bus_number,
           tickets: bookingPassengers.map((p: any) => ({
-            ticket_number: p.ticketNumber,
-            passenger_name: p.passengerName,
-            passenger_phone: p.phone,
-            seat_number: p.seatNumber,
-            checked_in_at: p.checkedInAt,
+            ticket_number: p.ticketNumber ?? p.ticket_number,
+            passenger_name: p.passengerName ?? p.passenger_name,
+            passenger_phone: p.phone ?? p.passengerPhone ?? p.passenger_phone,
+            seat_number: p.seatNumber ?? p.seat_number,
+            checked_in_at: p.checkedInAt ?? p.checked_in_at,
             status: p.status,
             passenger_type: p.passengerType
           }))
